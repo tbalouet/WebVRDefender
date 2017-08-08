@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebVR Defender</title>
+  <link rel="stylesheet" type="text/css" href="public/styles/inline.css">
+
+  <link rel="icon" type="image/ico" href="public/assets/icons/favicon.ico"/>
+
+  <!-- Add to home screen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="WebVR Defender">
+  <link rel="apple-touch-icon" href="public/assets/icons/icon-128x128.png">
+  
+  <meta name="msapplication-TileImage" content="public/assets/icons/icon-128x128.png">
+  <meta name="msapplication-TileColor" content="#2F3BA2">  
+  
+  <script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+  <script src="public/js/easyrtc.js"></script>
+  <!-- <script src="https://unpkg.com/networked-aframe/dist/networked-aframe.min.js"></script> -->
+  <script src="https://unpkg.com/networked-aframe/dist/networked-aframe.js"></script>
+  <script src="public/js/script.js"></script>
+</head>
+<body>
+  <!-- MENUBAR -->
+  <header class="header">
+    <h1 class="header__title">WebVR Defender</h1>
+    <button id="butQRCode" class="butQRCode headerButton" title="Get page QR code"></button>
+  </header>
+
+  <!-- CONTENT CONTAINERS -->
+
+  <div id="loaderDiv" class="dialog-container make-container--visible">
+    <img class="loader" src="public/assets/icons/loader.gif" />
+  </div>
+
+  <div id="qrCodeDiv" class="dialog-container">
+    <span id="closeQRCode" class="small close rounded heavy"></span>
+    <div id="qrcode"></div>
+  </div>
+
+  <!-- A-FRAME ELEMENTS -->
+
+  <a-scene fog="color: #bc483e; near: 0; far: 65;" networked-scene="app: myApp;room: room1;debug: true;onConnect: onConnectCB;">
+    <a-assets>
+      <a-asset-item id="monster" src="public/assets/models/monster.dae"></a-assets-item>
+      <!-- Should replace with https://github.com/mrdoob/three.js/blob/master/examples/webgl_loader_json_blender.html -->
+
+      <script id="tower-template" type="text/html">
+        <a-entity class="tower">
+          <a-box class="building" color="#5985ff" height=5></a-box>
+        </a-entity>
+      </script>
+    </a-assets>
+
+    <a-entity id="slot0" position="-5 0 -5"></a-entity>
+    <a-entity id="slot1" position="5 0 -5"></a-entity>
+    <a-entity id="slot2" position="-5 0 5"></a-entity>
+    <a-entity id="slot3" position="5 0 5"></a-entity>
+
+
+    <a-entity collada-model="#monster" scale="0.05 0.05 0.05" rotation="0 -90 0" position="-5 0 -15"></a-entity>
+
+    <a-sky color="#3f51b5"></a-sky>
+  </a-scene>
+
+  <!-- SCRIPTS -->
+
+  <script src="public/js/qrcode.js"></script>
+  <script src="public/js/ui-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "WebVR_Defender",
+  "version": "1.0.0",
+  "description": "A WebVR Tower Defense game",
+  "main": "server.js",
+  "devDependencies": {
+    "browserify": "~14.3.0",
+    "watchify": "^3.7.0",
+    "concurrently": "^3.1.0",
+    "http-server": "^0.10.0",
+    "ejs": "^2.4.2",
+    "nodemon": "^1.9.2"
+  },
+  "scripts": {
+    "dev": "concurrently \"nodemon server.js NODE_ENV=dev\" \"watchify client/js/main.js -o public/js/script.js -v\" ",
+    "watch": "watchify client/js/main.js -o public/js/script.js -v"
+  },
+  "author": "",
+  "license": "Apache 2.0",
+  "dependencies": {
+    "express": "^4.13.4",
+    "networked-aframe": "^0.2.3"
+  }
+}
