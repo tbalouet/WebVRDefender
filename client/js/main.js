@@ -2,23 +2,12 @@
 // found in the LICENSE file.
 (function(){
 	"use strict";
+  require("../lib/networked-aframe.js");
   var Util         = require("./util.js");
+  require("./components/environment.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
-
-  window.onConnectCB = function(data){
-    let player = document.createElement("a-entity");
-    player.id = "player";
-    player.setAttribute("networked", {
-      template          : "#tower-template",
-      showLocalTemplate : false
-    });
-    player.setAttribute("assign-slot", {});
-    player.setAttribute("camera", {});
-    player.setAttribute("look-controls", {});
-
-    document.querySelector("a-scene").appendChild(player);
-  }
+  require("./components/gameClient.js");
 
   window.onload = function(){
     function onSceneLoaded(){
