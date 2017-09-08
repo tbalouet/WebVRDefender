@@ -44,14 +44,17 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene fog="color: #bc483e; near: 0; far: 65;" networked-scene="app: myApp;room: room1;debug: true;" game-client>
+  <a-scene fog="color: #bc483e; near: 0; far: 65;" game-client>
     <a-assets>
+      <a-asset-item id="turet-obj" src="public/assets/models/turet/model.obj"></a-asset-item>
+      <a-asset-item id="turet-mtl" src="public/assets/models/turet/materials.mtl"></a-asset-item>
+
       <a-asset-item id="monster" src="public/assets/models/monster.dae"></a-assets-item>
       <!-- Should replace with https://github.com/mrdoob/three.js/blob/master/examples/webgl_loader_json_blender.html -->
 
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
-          <a-box class="building" color="#5985ff" height=5></a-box>
+          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" rotation="0 180 0"></a-entity>
         </a-entity>
       </script>
     </a-assets>
@@ -67,10 +70,10 @@
       <a-entity light="type: ambient; color: #f4f4f4; intensity: 0.4;" position="-8 10 -18"></a-entity>
     </a-entity>
 
-    <a-entity id="slot0" position="-5 2.5 -5"></a-entity>
-    <a-entity id="slot1" position="5 2.5 -5"></a-entity>
-    <a-entity id="slot2" position="-5 2.5 5"></a-entity>
-    <a-entity id="slot3" position="5 2.5 5"></a-entity>
+    <a-entity id="slot0" position="-5 1 -5"></a-entity>
+    <a-entity id="slot1" position="5 1 -5"></a-entity>
+    <a-entity id="slot2" position="-5 1 5"></a-entity>
+    <a-entity id="slot3" position="5 1 5"></a-entity>
 
 
     <a-entity collada-model="#monster" scale="0.05 0.05 0.05" rotation="0 -90 0" position="-5 0 -15"></a-entity>

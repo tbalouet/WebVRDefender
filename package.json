@@ -12,7 +12,7 @@
     "nodemon": "^1.9.2"
   },
   "scripts": {
-    "dev": "concurrently \"nodemon --inspect server.js NODE_ENV=dev\" \"watchify client/js/main.js -o public/js/script.js -v\" ",
+    "dev": "concurrently \"nodemon server.js NODE_ENV=dev\" \"watchify client/js/main.js -o public/js/script.js -v\" ",
     "watch": "watchify client/js/main.js -o public/js/script.js -v"
   },
   "author": "",

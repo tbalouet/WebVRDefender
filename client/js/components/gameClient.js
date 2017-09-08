@@ -7,31 +7,56 @@
   AFRAME.registerComponent('game-client', {
     init: function() {
       this.isInit = false;
-      document.body.addEventListener("occupantsReceived", this.onOccupantsReceived.bind(this));
 
+      this.gameState = {
+        isMaster : false,
+        clients  : {}
+      }
 
-      NAF.connection.network.easyrtc.webSocket.addEventListener("tartelette", function(senderRtcId, dataType, data, targetRtcId){
-        debugger;
-      })
-    },
-    onOccupantsReceived : function(evt){
-      this.occupantList = evt.detail.occupantList;
-      if(!this.isInit){
-        this.roomName     = evt.detail.name;
-        this.myInfo       = evt.detail.myInfo;
-
-        this.initClient();
-        this.isInit = true;
+      this.clientState = {
+        type : "3dof"
       }
     },
     initClient : function(){
-      let nbOccupants = 1;
-      for(let occ in this.occupantList){
-        if(this.occupantList.hasOwnProperty(occ)){
-          nbOccupants++;
-        }
+      var that = this;
+      this.setListeners();
+
+      if(!this.gameState.isMaster){        
+        NAF.connection.subscribeToDataChannel("getClientState", this.onGetClientState.bind(this));
+        console.log("[Game-Client]", "ClientState sent");
       }
-      console.log("Room occupants: ", nbOccupants);
+      else{
+        document.body.addEventListener("occupantsReceived", this.onOccupantsReceived.bind(this));
+      }
+    },
+    setListeners : function(evt){
+      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
+    },
+    onOccupantsReceived : function(event){
+      if(this.gameState.isMaster){
+        let newClientID = event.detail.myInfo.easyrtcid;
+        NAF.connection.broadcastDataGuaranteed("getClientState", {type : "unicast", clientID : newClientID});
+        console.log("[Game-Client]", "ClientState asked", newClientID);
+      }
+    },
+    onGetClientState : function(senderID, msg, data){
+      console.log("CLIENT STATE ASKED");
+    }
+    onGameStateUpdate : function(senderID, msg, data){
+      if(!this.gameState.isMaster){
+        this.gameState = data.gameState;
+        console.log("[Game-Client]", "Gamestate received", this.gameState);
+      }
+    },
+    initMesh : function(){
+      // let nbOccupants = 1;
+      // for(let occ in this.occupantList){
+      //   if(this.occupantList.hasOwnProperty(occ)){
+      //     nbOccupants++;
+      //   }
+      // }
+      // console.log("Room occupants: ", nbOccupants);
+      let nbOccupants = Math.random()*4;
           
       let player = document.createElement("a-entity");
       player.id = "player";
