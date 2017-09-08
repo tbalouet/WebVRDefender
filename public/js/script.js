@@ -17,27 +17,10 @@
 
   AFRAME.registerComponent('enemy', {
     init: function() {
-      var that = this;
-
-      var mixer = new THREE.AnimationMixer( document.querySelector("a-scene").object3D );
-      var loader = new THREE.JSONLoader();
-      loader.load( 'public/assets/models/monster.js', function ( geometry, materials ) {
-        // adjust color a bit
-        var material = materials[ 0 ];
-        material.morphTargets = true;
-        material.color.setHex( 0xffaaaa );
-
-        var mesh = new THREE.Mesh( geometry, materials );
-        that.el.object3D.add( mesh );
-        
-        mixer.clipAction( geometry.animations[ 0 ], mesh )
-            .setDuration( 1 )     // one second
-            .startAt( - Math.random() ) // random phase (already running)
-            .play();          // let's go
-      });
     }
-  })
-})();
+  });
+
+})()
 },{}],3:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
