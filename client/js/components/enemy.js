@@ -13,7 +13,7 @@
   AFRAME.registerComponent('enemy-pool', {
     init: function() {
 	var el = this.el;
-	for (var i=0; i<3; i++){
+	for (var i=0; i<7; i++){
 		var enemy = document.createElement("a-obj-model")
 		enemy.setAttribute("src", "#monster-obj")
 		enemy.setAttribute("mtl", "#monster-mtl")
@@ -21,14 +21,14 @@
 		var scaleFactor = Math.random()+5
 		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
 		var dur = Math.random()*20000
-		enemy.setAttribute("alongpath", "curve: #monster-track; dur:"+dur+";")
+		var delay = 5000 + Math.random()*5000
+		enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";")
 		enemy.setAttribute("enemy", "")
 		enemy.addEventListener('movingended', function () {
 			if (enemy.getAttribute("visible"))
-				console.log( document.querySelector("[goal]").components["goal"] ) // .decreaseLife()
+				document.querySelector("[goal]").emit("hit")
 			});
 		this.el.appendChild(enemy)
-		// should register an event for reaching the end of path, if visible when reached become invisible then decrease goal life point
 	}
     }
   });
