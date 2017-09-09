@@ -59,21 +59,27 @@
 // found in the LICENSE file.
 (function(){
   "use strict";
-  require("./presentation.js");
-  require("./player.js");
 
-
+  /**
+   * Handle discussions with the server and Game State
+   * @return {[type]}                   [description]
+   */
   AFRAME.registerComponent('game-client', {
     init: function() {
-      this.isInit = false;
-
+      //General game state with informations about all clients
       this.gameState = undefined;
 
       //TODO: Elaborate clientstate based on device
       this.clientState = {
-        type : "threedof"
+        ID     : 0,
+        type   : "threedof",
+        slotID : undefined
       }
     },
+    /**
+     * Init the client, called when connected to the server
+     * @return {[type]} [description]
+     */
     initClient : function(){
       var that = this;
 
@@ -82,42 +88,52 @@
       NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
 
       this.clientState.ID = NAF.clientId;
-      NAF.connection.network.easyrtc.sendServerMessage("clientConnect", { roomName: NAF.room, clientState : this.clientState }, 
+      this.sendEvent("clientConnect", this.initialSetup.bind(this));
+    },
+    /**
+     * Send an event to the server and fetch back the Game State before broadcasting it
+     * @param  {[type]}   evtName  [description]
+     * @param  {Function} callback [description]
+     * @return {[type]}            [description]
+     */
+    sendEvent: function(evtName, callback){
+      var that = this;
+      callback = callback || function(){};
+
+      NAF.connection.network.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState }, 
         function(msgType, msgData){
           that.gameState = msgData.gameState;
-          console.log("[Game-Client]", "Gamestate received", that.gameState);
-          that.initialSetup();
+          console.log("[Game-Client]", "Gamestate received after "+evtName, that.gameState);
+
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
+
+          callback();
         }, function(errorCode, errorText){
-          console.log("Error was " + errorText);
+          console.log("[Game-Client]", "Error on calling server for " + evtName, errorText);
         });
     },
+    /**
+     * Function to broadcast a received update of the game state
+     * @return {[type]} [description]
+     */
     sendGameStateUpdate: function(){
       NAF.connection.broadcastDataGuaranteed("gameStateUpdate", {type : "broadcast", gameState : this.gameState});
     },
+    /**
+     * Event called on window.onbeforeunload when client disconnects
+     * @return {[type]} [description]
+     */
     onDisconnect : function(){
       var that = this;
-
-      NAF.connection.network.easyrtc.sendServerMessage("clientDisconnect", { roomName: NAF.room, clientID : NAF.clientId }, 
-        function(msgType, msgData){
-          that.gameState = msgData.gameState;
-          console.log("[Game-Client]", "Gamestate received", that.gameState);
-          setTimeout(that.sendGameStateUpdate.bind(that), 250);
-        }, function(errorCode, errorText){
-          console.log("Error was " + errorText);
-        });
+      this.sendEvent("clientDisconnect");
     },
+    /**
+     * Send game state to server when updated
+     * @return {[type]} [description]
+     */
     sendGameStateToServer : function(){
       var that = this;
-
-      NAF.connection.network.easyrtc.sendServerMessage("gameStateUpdated", { roomName: NAF.room, clientState : this.clientState }, 
-        function(msgType, msgData){
-          that.gameState = msgData.gameState;
-          console.log("[Game-Client]", "Gamestate received", that.gameState);
-          setTimeout(that.sendGameStateUpdate.bind(that), 250);
-        }, function(errorCode, errorText){
-          console.log("Error was " + errorText);
-        });
+      this.sendEvent("gameStateUpdated");
     },
     /**
      * Event received by clients when gameState is updated
@@ -130,45 +146,60 @@
       this.gameState = data.gameState;
       console.log("[Game-Client]", "Gamestate updated", this.gameState);
     },
+    /**
+     * Init player entity by checking its type
+     * @return {[type]} [description]
+     */
     initialSetup : function(){
+      let player = document.createElement("a-entity");
+      player.id = "player"+Math.floor(Math.random()*50);
+
       switch(this.clientState.type){
         case "threedof":
-          let slots = document.querySelector("[slot-threedof]").children;
-          let slotID = undefined;
-          for(let i = 0;i < slots.length; ++i){
-            let isTaken = false;
-            for(let clientID in this.gameState.clients){
-              if(this.gameState.clients.hasOwnProperty(clientID)){
-                let aClient = this.gameState.clients[clientID];
-                if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-                  isTaken = true;
-                  break;
-                }
-              }
-            }
-            if(!isTaken){
-              slotID = slots[i].id;
-              break;
-            }
-          }
-
+          let slotID = this.getUnusedSlot();
           if(slotID){
-            this.clientState.slotID = slotID;
-            this.sendGameStateToServer();
+            player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
           }
           break;
       }
 
-      let player = document.createElement("a-entity");
-      player.id = "player"+Math.floor(Math.random()*50);
-      player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
       document.querySelector("a-scene").appendChild(player);
+    },
+    /**
+     * Check list of slots against already used one
+     * @return {int} returns first free slot
+     */
+    getUnusedSlot : function(){
+      let slots = document.querySelector("[slot-threedof]").children;
+      let slotID = undefined;
+      for(let i = 0;i < slots.length; ++i){
+        let isTaken = false;
+        for(let clientID in this.gameState.clients){
+          if(this.gameState.clients.hasOwnProperty(clientID)){
+            let aClient = this.gameState.clients[clientID];
+            if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
+              isTaken = true;
+              break;
+            }
+          }
+        }
+        if(!isTaken){
+          slotID = slots[i].id;
+          break;
+        }
+      }
+
+      if(slotID){
+        this.clientState.slotID = slotID;
+        this.sendGameStateToServer();
+      }
+      return slotID;
     }
   });
 
 })()
 
-},{"./player.js":5,"./presentation.js":6}],4:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function(){
   "use strict";
 
@@ -263,21 +294,28 @@ var WVRD = {};
 	"use strict";
 
   require("../lib/networked-aframe.js");
-  var Util         = require("./util.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
+  require("./components/presentation.js");
+  require("./components/player.js");
 
+  /**
+   * Callback called on Networked AFrame server connect
+   * @param  {[type]} data [description]
+   * @return {[type]}      [description]
+   */
   window.onConnectCB = function(data){
     document.querySelector("[game-client]").components["game-client"].initClient();
   }
 
   window.onload = function(){
     function onSceneLoaded(){
+      //Fetch the room name in the URL or puts you in room42
       let room = AFRAME.utils.getUrlParameter("room");
       if(!room){
-        room = "room42";//"room"+Math.floor(Math.random()*50);
+        room = "room42";
         console.log("======== JOIN DA ROOM: localhost:3000/?room="+room+" ========");
       }
       document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
@@ -288,27 +326,7 @@ var WVRD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":9,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./util.js":8}],8:[function(require,module,exports){
-var Util = {};
-(function(){
-  "use strict";
-  /**
-   * Generate an Unique ID
-   * @return {string} Unique ID of length 4
-   */
-  Util.guid = function(){
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
-    }
-    return s4();
-  }
-})()
-
-module.exports = Util;
-
-},{}],9:[function(require,module,exports){
+},{"../lib/networked-aframe.js":8,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./components/player.js":5,"./components/presentation.js":6}],8:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

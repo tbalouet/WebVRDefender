@@ -28,16 +28,6 @@ var myIceServers = [
   {"url":"stun:stun1.l.google.com:19302"},
   {"url":"stun:stun2.l.google.com:19302"},
   {"url":"stun:stun3.l.google.com:19302"}
-  // {
-  //   "url":"turn:[ADDRESS]:[PORT]",
-  //   "username":"[USERNAME]",
-  //   "credential":"[CREDENTIAL]"
-  // },
-  // {
-  //   "url":"turn:[ADDRESS]:[PORT][?transport=tcp]",
-  //   "username":"[USERNAME]",
-  //   "credential":"[CREDENTIAL]"
-  // }
 ];
 easyrtc.setOption("appIceServers", myIceServers);
 easyrtc.setOption("logLevel", "debug");

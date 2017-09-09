@@ -5,21 +5,28 @@ var WVRD = {};
 	"use strict";
 
   require("../lib/networked-aframe.js");
-  var Util         = require("./util.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
+  require("./components/presentation.js");
+  require("./components/player.js");
 
+  /**
+   * Callback called on Networked AFrame server connect
+   * @param  {[type]} data [description]
+   * @return {[type]}      [description]
+   */
   window.onConnectCB = function(data){
     document.querySelector("[game-client]").components["game-client"].initClient();
   }
 
   window.onload = function(){
     function onSceneLoaded(){
+      //Fetch the room name in the URL or puts you in room42
       let room = AFRAME.utils.getUrlParameter("room");
       if(!room){
-        room = "room42";//"room"+Math.floor(Math.random()*50);
+        room = "room42";
         console.log("======== JOIN DA ROOM: localhost:3000/?room="+room+" ========");
       }
       document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
