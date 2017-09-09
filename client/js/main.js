@@ -6,6 +6,7 @@
   require("./components/assign_slot.js");
   require("./components/enemy.js");
   require("./components/goal.js");
+  require("./components/presentation.js");
 
   window.onConnectCB = function(data){
     let player = document.createElement("a-entity");
@@ -17,6 +18,7 @@
     player.setAttribute("assign-slot", {});
     player.setAttribute("camera", {});
     player.setAttribute("look-controls", {});
+    player.setAttribute("presentation-display", {});
     var cursor = document.createElement("a-cursor");
     player.appendChild(cursor);
 

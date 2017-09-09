@@ -6,6 +6,7 @@
 	var el = this.el;
     	el.addEventListener('mouseenter', function () {
 		el.setAttribute('visible', false);
+		el.emit('kill')
 	});
     }
   });
@@ -28,6 +29,7 @@
 			if (enemy.getAttribute("visible"))
 				document.querySelector("[goal]").emit("hit")
 			});
+		enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)")
 		this.el.appendChild(enemy)
 	}
     }
