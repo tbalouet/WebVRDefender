@@ -96,7 +96,9 @@
 	    <a-obj-model src="#castle-obj" mtl="#castle-mtl" position="0 -5 -10" scale="50 50 50"></a-obj-model>
     </a-entity>
 
-    <a-obj-model src="#drakar-obj" mtl="#drakar-mtl" position="0 1 -50" scale="10 10 10" rotation="0 -90 0"></a-obj-model>
+    <a-obj-model src="#drakar-obj" mtl="#drakar-mtl" position="0 1 -50" scale="10 10 10" rotation="0 -90 -10">
+	    <a-animation attribute="rotation" dur="10000" to="0 -90 10" repeat="indefinite" direction="alternate"></a-animation>
+    </a-obj-model>
 
     <a-sky color="white"></a-sky>
   </a-scene>
