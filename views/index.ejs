@@ -47,7 +47,7 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene fog="color: white; near: 0; far: 105;" game-client>
+  <a-scene fog="color: white; near: 0; far: 105;" game-client game-dynamics-parameters>
     <a-assets>
       <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
       <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
@@ -59,6 +59,8 @@
       <a-asset-item id="castle-mtl" src="public/assets/models/castle/materials.mtl"></a-assets-item>
       <a-asset-item id="drakar-obj" src="public/assets/models/drakar/model.obj"></a-assets-item>
       <a-asset-item id="drakar-mtl" src="public/assets/models/drakar/materials.mtl"></a-assets-item>
+      <a-asset-item id="dragon-obj" src="public/assets/models/dragon/model.obj"></a-assets-item>
+      <a-asset-item id="dragon-mtl" src="public/assets/models/dragon/materials.mtl"></a-assets-item>
 
       <audio id="laser-sound" src="public/assets/sounds/Laser_Cannon-Mike_Koenig-797224747.mp3" preload="auto"></audio>
       <audio id="monster-sound" src="public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3" preload="auto"></audio>
@@ -96,6 +98,8 @@
     <a-entity goal position="-17 10 90">
 	    <a-obj-model src="#castle-obj" mtl="#castle-mtl" position="0 -5 -10" scale="50 50 50"></a-obj-model>
     </a-entity>
+
+    <a-obj-model src="#dragon-obj" mtl="#dragon-mtl" position="0 30 -90" scale="3 3 3" rotation="0 -90 -10"></a-obj-model>
 
     <a-obj-model src="#drakar-obj" mtl="#drakar-mtl" position="0 1 -50" scale="10 10 10" rotation="0 -90 -10">
 	    <a-animation attribute="rotation" dur="10000" to="0 -90 10" repeat="indefinite" direction="alternate"></a-animation>

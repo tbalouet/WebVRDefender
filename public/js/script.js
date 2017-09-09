@@ -168,7 +168,19 @@
 
 })()
 
-},{"./player.js":5,"./presentation.js":6}],4:[function(require,module,exports){
+},{"./player.js":6,"./presentation.js":7}],4:[function(require,module,exports){
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent('game-dynamics-parameters', {
+    init: function() {
+	console.log("game parameters loaded but empty")
+    },
+  });
+
+})()
+
+},{}],5:[function(require,module,exports){
 (function(){
   "use strict";
 
@@ -194,7 +206,7 @@
 
 })()
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 (function(){
   "use strict";
 
@@ -236,7 +248,7 @@
 
 })()
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function(){
   "use strict";
 
@@ -255,7 +267,7 @@
 
 })()
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 var WVRD = {};
@@ -268,6 +280,7 @@ var WVRD = {};
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
+  require("./components/gameDynamicsParameters.js");
 
   window.onConnectCB = function(data){
     document.querySelector("[game-client]").components["game-client"].initClient();
@@ -288,7 +301,7 @@ var WVRD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":9,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./util.js":8}],8:[function(require,module,exports){
+},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./util.js":9}],9:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
@@ -308,7 +321,7 @@ var Util = {};
 
 module.exports = Util;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -3879,4 +3892,4 @@ module.exports = Util;
 
 /***/ })
 /******/ ]);
-},{}]},{},[7]);
+},{}]},{},[8]);
