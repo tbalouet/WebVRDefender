@@ -46,7 +46,7 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene  game-client>
+  <a-scene fog="color: white; near: 0; far: 1000;" game-client>
     <a-assets>
       <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
       <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
@@ -63,7 +63,7 @@
 
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
-          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" rotation="0 180 0"></a-entity>
+          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" rotation="0 180 0" scale="3 3 3"></a-entity>
         </a-entity>
       </script>
     </a-assets>
@@ -71,10 +71,10 @@
 
     <a-entity map>
       <a-entity slot-threedof >
-        <a-entity id="slot0" position="-5 9 -5"></a-entity>
-        <a-entity id="slot1" position="50 33 -40"></a-entity>
-        <a-entity id="slot2" position="25 20 35"></a-entity>
-        <a-entity id="slot3" position="-60 51 34"></a-entity>
+        <a-entity id="slot0" position="-9.5 13.6 -12"></a-entity>
+        <a-entity id="slot1" position="43.6 8.7 -41"></a-entity>
+        <a-entity id="slot2" position="28 13.8 -22.7"></a-entity>
+        <a-entity id="slot3" position="-43.2 28.7 -12.9"></a-entity>
       </a-entity>
       <a-curve id="monster-track">
         <a-curve-point position="10 -6 -59"></a-curve-point>
