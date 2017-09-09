@@ -46,7 +46,7 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene  game-client>
+  <a-scene fog="color: white; near: 0; far: 105;" game-client>
     <a-assets>
       <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
       <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
@@ -93,7 +93,7 @@
 	    <a-obj-model src="#castle-obj" mtl="#castle-mtl" position="0 -5 -10" scale="50 50 50"></a-obj-model>
     </a-entity>
 
-    <a-sky color="#3f51b5"></a-sky>
+    <a-sky color="white"></a-sky>
   </a-scene>
 
   <!-- SCRIPTS -->
