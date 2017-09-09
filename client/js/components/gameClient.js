@@ -8,63 +8,105 @@
     init: function() {
       this.isInit = false;
 
-      this.gameState = {
-        isMaster : false,
-        clients  : {}
-      }
+      this.gameState = undefined;
 
+      //TODO: Elaborate clientstate based on device
       this.clientState = {
-        type : "3dof"
+        type : "threedof"
       }
     },
     initClient : function(){
       var that = this;
-      this.setListeners();
 
-      if(!this.gameState.isMaster){        
-        NAF.connection.subscribeToDataChannel("getClientState", this.onGetClientState.bind(this));
-        console.log("[Game-Client]", "ClientState sent");
-      }
-      else{
-        document.body.addEventListener("occupantsReceived", this.onOccupantsReceived.bind(this));
-      }
-    },
-    setListeners : function(evt){
+      window.onbeforeunload = this.onDisconnect.bind(this);
+
       NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
+
+      this.clientState.ID = NAF.clientId;
+      NAF.connection.network.easyrtc.sendServerMessage("clientConnect", { roomName: NAF.room, clientState : this.clientState }, 
+        function(msgType, msgData){
+          that.gameState = msgData.gameState;
+          console.log("[Game-Client]", "Gamestate received", that.gameState);
+          that.initialSetup();
+          setTimeout(that.sendGameStateUpdate.bind(that), 250);
+        }, function(errorCode, errorText){
+          console.log("Error was " + errorText);
+        });
     },
-    onOccupantsReceived : function(event){
-      if(this.gameState.isMaster){
-        let newClientID = event.detail.myInfo.easyrtcid;
-        NAF.connection.broadcastDataGuaranteed("getClientState", {type : "unicast", clientID : newClientID});
-        console.log("[Game-Client]", "ClientState asked", newClientID);
-      }
+    sendGameStateUpdate: function(){
+      NAF.connection.broadcastDataGuaranteed("gameStateUpdate", {type : "broadcast", gameState : this.gameState});
     },
-    onGetClientState : function(senderID, msg, data){
-      console.log("CLIENT STATE ASKED");
-    }
+    onDisconnect : function(){
+      var that = this;
+
+      NAF.connection.network.easyrtc.sendServerMessage("clientDisconnect", { roomName: NAF.room, clientID : NAF.clientId }, 
+        function(msgType, msgData){
+          that.gameState = msgData.gameState;
+          console.log("[Game-Client]", "Gamestate received", that.gameState);
+          setTimeout(that.sendGameStateUpdate.bind(that), 250);
+        }, function(errorCode, errorText){
+          console.log("Error was " + errorText);
+        });
+    },
+    sendGameStateToServer : function(){
+      var that = this;
+
+      NAF.connection.network.easyrtc.sendServerMessage("gameStateUpdated", { roomName: NAF.room, clientState : this.clientState }, 
+        function(msgType, msgData){
+          that.gameState = msgData.gameState;
+          console.log("[Game-Client]", "Gamestate received", that.gameState);
+          setTimeout(that.sendGameStateUpdate.bind(that), 250);
+        }, function(errorCode, errorText){
+          console.log("Error was " + errorText);
+        });
+    },
+    /**
+     * Event received by clients when gameState is updated
+     * @param  {[type]} senderID [description]
+     * @param  {[type]} msg      [description]
+     * @param  {[type]} data     [description]
+     * @return {[type]}          [description]
+     */
     onGameStateUpdate : function(senderID, msg, data){
-      if(!this.gameState.isMaster){
-        this.gameState = data.gameState;
-        console.log("[Game-Client]", "Gamestate received", this.gameState);
-      }
+      this.gameState = data.gameState;
+      console.log("[Game-Client]", "Gamestate updated", this.gameState);
     },
-    initMesh : function(){
-      // let nbOccupants = 1;
-      // for(let occ in this.occupantList){
-      //   if(this.occupantList.hasOwnProperty(occ)){
-      //     nbOccupants++;
-      //   }
-      // }
-      // console.log("Room occupants: ", nbOccupants);
-      let nbOccupants = Math.random()*4;
-          
+    initialSetup : function(){
+      switch(this.clientState.type){
+        case "threedof":
+          let slots = document.querySelector("[slot-threedof]").children;
+          let slotID = undefined;
+          for(let i = 0;i < slots.length; ++i){
+            let isTaken = false;
+            for(let clientID in this.gameState.clients){
+              if(this.gameState.clients.hasOwnProperty(clientID)){
+                let aClient = this.gameState.clients[clientID];
+                if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
+                  isTaken = true;
+                  break;
+                }
+              }
+            }
+            if(!isTaken){
+              slotID = slots[i].id;
+              break;
+            }
+          }
+
+          if(slotID){
+            this.clientState.slotID = slotID;
+            this.sendGameStateToServer();
+          }
+          break;
+      }
+
       let player = document.createElement("a-entity");
       player.id = "player";
       player.setAttribute("networked", {
         template          : "#tower-template",
         showLocalTemplate : false
       });
-      player.setAttribute("assign-slot", { slotNum : nbOccupants});
+      player.setAttribute("assign-slot", { slotID : this.clientState.slotID});
       player.setAttribute("camera", {});
       player.setAttribute("look-controls", {});
 

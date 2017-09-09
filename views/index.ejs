@@ -19,8 +19,8 @@
   <meta name="msapplication-TileImage" content="public/assets/icons/icon-128x128.png">
   <meta name="msapplication-TileColor" content="#2F3BA2">  
   
+  <script src="public/js/socket.io.js"></script>
   <script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
   <script src="public/js/easyrtc.js"></script>
   <script src="public/js/script.js"></script>
 </head>
@@ -70,10 +70,14 @@
       <a-entity light="type: ambient; color: #f4f4f4; intensity: 0.4;" position="-8 10 -18"></a-entity>
     </a-entity>
 
-    <a-entity id="slot0" position="-5 1 -5"></a-entity>
-    <a-entity id="slot1" position="5 1 -5"></a-entity>
-    <a-entity id="slot2" position="-5 1 5"></a-entity>
-    <a-entity id="slot3" position="5 1 5"></a-entity>
+    <a-entity map>
+      <a-entity slot-threedof >
+        <a-entity id="slot0" position="-5 1 -5"></a-entity>
+        <a-entity id="slot1" position="5 1 -5"></a-entity>
+        <a-entity id="slot2" position="-5 1 5"></a-entity>
+        <a-entity id="slot3" position="5 1 5"></a-entity>
+      </a-entity>
+    </a-entity>
 
 
     <a-entity collada-model="#monster" scale="0.05 0.05 0.05" rotation="0 -90 0" position="-5 0 -15"></a-entity>

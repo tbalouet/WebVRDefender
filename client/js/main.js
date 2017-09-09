@@ -16,13 +16,11 @@ var WVRD = {};
   }
 
   window.onload = function(){
-
     function onSceneLoaded(){
       let room = AFRAME.utils.getUrlParameter("room");
       if(!room){
         room = "room42";//"room"+Math.floor(Math.random()*50);
-        document.querySelector("[game-client]").components["game-client"].gameState.isMaster = true;
-        alert("Join da room: localhost:3000/?room="+room);
+        console.log("======== JOIN DA ROOM: localhost:3000/?room="+room+" ========");
       }
       document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
 

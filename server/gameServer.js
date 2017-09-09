@@ -2,9 +2,14 @@
  * Use of this source code is governed by an Apache license that can be
  * found in the LICENSE file.
  */
-
 function GameServer(rtcServer){
+  var that = this;
   this.rtcServer = rtcServer;
+
+
+  this.gameState = {
+    clients  : {}
+  }
 
   this.registerEvents();
 }
@@ -22,6 +27,31 @@ GameServer.prototype.registerEvents = function(){
   this.rtcServer.events.on("roomCreate", this.onRoomCreate.bind(this));
 
   this.rtcServer.events.on("roomJoin", this.onRoomJoin.bind(this));
+
+  //DEFAULT GAME CALLS
+  var onEasyrtcMsg = function(connectionObj, msg, socketCallback, next){
+      switch(msg.msgType){
+          case "clientConnect":
+            this.gameState.clients[msg.msgData.clientState.ID] = msg.msgData.clientState;
+            socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
+            next(null);
+            break;
+          case "clientDisconnect":
+            delete this.gameState.clients[msg.msgData.clientID];
+            socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
+            next(null);
+            break;
+          case "gameStateUpdated":
+            this.gameState.clients[msg.msgData.clientState.ID] = msg.msgData.clientState;
+            socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
+            next(null);
+            break;
+          default:
+              this.rtcServer.events.emitDefault("easyrtcMsg", connectionObj, msg, socketCallback, next);
+              break;
+      }
+  };
+  this.rtcServer.events.on("easyrtcMsg", onEasyrtcMsg.bind(this));
 };
 
 GameServer.prototype.onEasyRTCAuth = function(socket, easyrtcid, msg, socketCallback, callback) {
@@ -48,9 +78,6 @@ GameServer.prototype.onRoomCreate = function(appObj, creatorConnectionObj, roomN
 GameServer.prototype.onRoomJoin = function(connectionObj, roomName, roomParameter, callback) {
   this.log("["+connectionObj.getEasyrtcid()+"] Credential retrieved!", connectionObj.getFieldValueSync("credential"));
   this.rtcServer.events.defaultListeners.roomJoin(connectionObj, roomName, roomParameter, callback);
-
-  console.log("MEEEESSSAAAAGGGGEEEEE");
-  connectionObj.socket.send("tartelette")
 };
 
 module.exports = GameServer;

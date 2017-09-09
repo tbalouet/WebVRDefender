@@ -3,10 +3,10 @@
 
   AFRAME.registerComponent('assign-slot', {
     schema: {
-      slotNum: { type: 'int', default: 0 },
+      slotID: { type: 'string', default: "" },
     },
     init: function() {
-      var newpos = document.getElementById("slot"+(this.data.slotNum - 1)).getAttribute("position");
+      var newpos = document.getElementById(this.data.slotID).getAttribute("position");
       this.el.setAttribute("position", newpos);
       console.log("Slot assigned:", this.data.slotNum);
     }
