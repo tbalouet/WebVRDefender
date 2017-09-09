@@ -50,3 +50,13 @@ Folder Structure
    * css files
  * `/views/`
    * ejs template files folder. Contains index.ejs, main file of the Web App
+
+Attributions
+----------------
+
+3D models in winter theme by Aime
+Sounds
+  http://soundbible.com/1810-Wind.html
+  http://soundbible.com/1771-Laser-Cannon.html
+  http://soundbible.com/1033-Zombie-In-Pain.html
+

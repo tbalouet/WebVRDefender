@@ -17,10 +17,15 @@
 
   AFRAME.registerComponent('enemy', {
     init: function() {
+	var el = this.el;
+    	el.addEventListener('mouseenter', function () {
+		el.setAttribute('visible', false);
+	});
     }
   });
 
 })()
+
 },{}],3:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -77,6 +82,8 @@
     player.setAttribute("assign-slot", {});
     player.setAttribute("camera", {});
     player.setAttribute("look-controls", {});
+    var cursor = document.createElement("a-cursor");
+    player.appendChild(cursor);
 
     document.querySelector("a-scene").appendChild(player);
   }

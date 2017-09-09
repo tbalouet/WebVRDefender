@@ -53,6 +53,8 @@
     player.setAttribute("assign-slot", {});
     player.setAttribute("camera", {});
     player.setAttribute("look-controls", {});
+    var cursor = document.createElement("a-cursor");
+    player.appendChild(cursor);
 
     document.querySelector("a-scene").appendChild(player);
   }
