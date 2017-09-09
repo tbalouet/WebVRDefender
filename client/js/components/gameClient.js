@@ -3,6 +3,7 @@
 (function(){
   "use strict";
   require("./presentation.js");
+  require("./player.js");
 
 
   AFRAME.registerComponent('game-client', {
@@ -102,18 +103,8 @@
       }
 
       let player = document.createElement("a-entity");
-      player.id = "player";
-      player.setAttribute("networked", {
-        template          : "#tower-template",
-        showLocalTemplate : false
-      });
-      player.setAttribute("assign-slot", { slotID : this.clientState.slotID});
-      player.setAttribute("camera", {});
-      player.setAttribute("look-controls", {});
-      player.setAttribute("presentation-display", {});
-      var cursor = document.createElement("a-cursor");
-      player.appendChild(cursor);
-
+      player.id = "player"+Math.floor(Math.random()*50);
+      player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
       document.querySelector("a-scene").appendChild(player);
     }
   });

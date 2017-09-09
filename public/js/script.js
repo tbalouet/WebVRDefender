@@ -60,6 +60,7 @@
 (function(){
   "use strict";
   require("./presentation.js");
+  require("./player.js");
 
 
   AFRAME.registerComponent('game-client', {
@@ -159,25 +160,15 @@
       }
 
       let player = document.createElement("a-entity");
-      player.id = "player";
-      player.setAttribute("networked", {
-        template          : "#tower-template",
-        showLocalTemplate : false
-      });
-      player.setAttribute("assign-slot", { slotID : this.clientState.slotID});
-      player.setAttribute("camera", {});
-      player.setAttribute("look-controls", {});
-      player.setAttribute("presentation-display", {});
-      var cursor = document.createElement("a-cursor");
-      player.appendChild(cursor);
-
+      player.id = "player"+Math.floor(Math.random()*50);
+      player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
       document.querySelector("a-scene").appendChild(player);
     }
   });
 
 })()
 
-},{"./presentation.js":5}],4:[function(require,module,exports){
+},{"./player.js":5,"./presentation.js":6}],4:[function(require,module,exports){
 (function(){
   "use strict";
 
@@ -207,6 +198,43 @@
 (function(){
   "use strict";
 
+  AFRAME.registerComponent('player', {
+    schema: {
+      slotID: { type: 'string', default: "" },
+      type: { type: 'string', default: "" },
+    },
+    init: function() {      
+      this.el.setAttribute("networked", {
+        template          : "#tower-template",
+        showLocalTemplate : false
+      });
+
+      this.el.setAttribute("assign-slot", { slotID : this.data.slotID});
+      this.el.setAttribute("camera", {});
+      this.el.setAttribute("look-controls", {});
+      this.el.setAttribute("presentation-display", {});
+
+      var cursor = document.createElement("a-cursor");
+      this.el.appendChild(cursor);
+
+
+      let mesh = document.createElement("a-entity");
+      switch(this.data.type){
+        case "threedof":
+          mesh.setAttribute("obj-model", {obj: "#turet-obj", mtl: "#turet-mtl"});
+          mesh.setAttribute("position", "0 -0.5 0");
+          mesh.setAttribute("rotation", "0 180 0");
+          break;
+      }
+      this.el.appendChild(mesh);
+    }
+  });
+
+})()
+},{}],6:[function(require,module,exports){
+(function(){
+  "use strict";
+
   AFRAME.registerComponent('presentation-display', {
     init: function() {
     	var el = this.el;
@@ -221,7 +249,7 @@
 
 })()
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 var WVRD = {};
@@ -254,7 +282,7 @@ var WVRD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":8,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./util.js":7}],7:[function(require,module,exports){
+},{"../lib/networked-aframe.js":9,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./util.js":8}],8:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
@@ -274,7 +302,7 @@ var Util = {};
 
 module.exports = Util;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -3845,4 +3873,4 @@ module.exports = Util;
 
 /***/ })
 /******/ ]);
-},{}]},{},[6]);
+},{}]},{},[7]);
