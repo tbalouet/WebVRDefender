@@ -48,7 +48,7 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene fog="color: white; near: 0; far: 85;" networked-scene="app: myApp;room: room1;debug: true;onConnect: onConnectCB;">
+  <a-scene fog="color: white; near: 0; far: 105;" networked-scene="app: myApp;room: room1;debug: true;onConnect: onConnectCB;">
     <a-assets>
       <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
       <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
@@ -56,6 +56,8 @@
       <a-asset-item id="terrain-mtl" src="public/assets/models/terrain/materials.mtl"></a-assets-item>
       <a-asset-item id="turet-obj" src="public/assets/models/turet/model.obj"></a-assets-item>
       <a-asset-item id="turet-mtl" src="public/assets/models/turet/materials.mtl"></a-assets-item>
+      <a-asset-item id="castle-obj" src="public/assets/models/castle/model.obj"></a-assets-item>
+      <a-asset-item id="castle-mtl" src="public/assets/models/castle/materials.mtl"></a-assets-item>
 
       <audio id="laser-sound" src="public/assets/sounds/Laser_Cannon-Mike_Koenig-797224747.mp3" preload="auto"></audio>
       <audio id="monster-sound" src="public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3" preload="auto"></audio>
@@ -93,9 +95,10 @@
     <a-obj-model src="#terrain-obj" mtl="#terrain-mtl" position="0 11 0" scale="100 100 100"></a-obj-model>
 
     <!-- should be a pool instead -->
-    <a-obj-model src="#monster-obj" mtl="#monster-mtl" enemy alongpath="curve: #monster-track; loop:true; dur:30000;"></a-obj-model>
-    <a-obj-model src="#monster-obj" mtl="#monster-mtl" enemy scale="6 6 6" alongpath="curve: #monster-track; loop:true; dur:35000; rotate:true;"></a-obj-model>
-    <a-obj-model src="#monster-obj" mtl="#monster-mtl" enemy scale="4 3 4" alongpath="curve: #monster-track; loop:true; dur:20000;"></a-obj-model>
+    <a-entity enemy-pool></a-entity>
+    <a-entity goal position="-17 10 90">
+	    <a-obj-model src="#castle-obj" mtl="#castle-mtl" position="0 -5 -10" scale="50 50 50"></a-obj-model>
+    </a-entity>
 
     <a-sky color="#3f51b5"></a-sky>
   </a-scene>

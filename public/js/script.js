@@ -24,9 +24,49 @@
     }
   });
 
+  AFRAME.registerComponent('enemy-pool', {
+    init: function() {
+	var el = this.el;
+	for (var i=0; i<3; i++){
+		var enemy = document.createElement("a-obj-model")
+		enemy.setAttribute("src", "#monster-obj")
+		enemy.setAttribute("mtl", "#monster-mtl")
+		enemy.setAttribute("rotation", "0 180 0")
+		var scaleFactor = Math.random()+5
+		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
+		var dur = Math.random()*20000
+		enemy.setAttribute("alongpath", "curve: #monster-track; dur:"+dur+";")
+		enemy.setAttribute("enemy", "")
+		enemy.addEventListener('movingended', function () {
+			if (enemy.getAttribute("visible"))
+				console.log( document.querySelector("[goal]").components["goal"] ) // .decreaseLife()
+			});
+		this.el.appendChild(enemy)
+		// should register an event for reaching the end of path, if visible when reached become invisible then decrease goal life point
+	}
+    }
+  });
+
 })()
 
 },{}],3:[function(require,module,exports){
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent('goal', {
+    init: function() {
+	var el = this.el;
+	var life = document.createElement("a-cylinder")
+	life.setAttribute("color", "green")
+	life.setAttribute("height", "10")
+	el.appendChild(life)
+    }
+  });
+	// should have a method to decrease life point and update life visual
+
+})()
+
+},{}],4:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 (function(){
@@ -34,43 +74,7 @@
   var Util         = require("./util.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
-  // currently empty
-
-  // should become a component
-  var spots = [ 
-	{pos: new THREE.Vector3( 0, 1, -1 ), occupied: false},
-	{pos: new THREE.Vector3( 2, 1, -1 ), occupied: false},
-	{pos: new THREE.Vector3( 4, 1, -1 ), occupied: false},
-	{pos: new THREE.Vector3( 1, 1, -2 ), occupied: false},
-	{pos: new THREE.Vector3( 3, 1, -2 ), occupied: false}, 
-	{pos: new THREE.Vector3( 5, 1, -2 ), occupied: false} ]
-  function addSpots(){
-	//console.log(AFRAME.scene[0])
-  }
-  function availableSpots(){
-	var available = 0
-	for (var spot in spots){
-		if (!spots[spot].occupied)
-			available++
-	}
-	return available
-  }
-  function getNextSpot(){
-	  if (availableSpots()>0){
-		for (var spot in spots){
-			if (!spots[spot].occupied){
-				spots[spot].occupied = true
-				return spots[spot].pos
-			}
-		}
-	  }
-  }
-  console.log(addSpots())
-  
-  /*
-  ToDo for game dynamics
-	allow spot to be picked by gazing at it
-  */
+  require("./components/goal.js");
 
   window.onConnectCB = function(data){
     let player = document.createElement("a-entity");
@@ -96,7 +100,7 @@
   };
 })();
 
-},{"./components/assign_slot.js":1,"./components/enemy.js":2,"./util.js":4}],4:[function(require,module,exports){
+},{"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/goal.js":3,"./util.js":5}],5:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
@@ -116,4 +120,4 @@ var Util = {};
 
 module.exports = Util;
 
-},{}]},{},[3]);
+},{}]},{},[4]);
