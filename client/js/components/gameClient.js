@@ -2,6 +2,7 @@
 // found in the LICENSE file.
 (function(){
   "use strict";
+  require("./presentation.js");
 
 
   AFRAME.registerComponent('game-client', {
@@ -109,6 +110,9 @@
       player.setAttribute("assign-slot", { slotID : this.clientState.slotID});
       player.setAttribute("camera", {});
       player.setAttribute("look-controls", {});
+      player.setAttribute("presentation-display", {});
+      var cursor = document.createElement("a-cursor");
+      player.appendChild(cursor);
 
       document.querySelector("a-scene").appendChild(player);
     }

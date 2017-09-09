@@ -6,12 +6,12 @@ var WVRD = {};
 
   require("../lib/networked-aframe.js");
   var Util         = require("./util.js");
-  require("./components/environment.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
+  require("./components/goal.js");
 
-  window.onConnectCB = function(){
+  window.onConnectCB = function(data){
     document.querySelector("[game-client]").components["game-client"].initClient();
   }
 

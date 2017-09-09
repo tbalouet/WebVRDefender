@@ -9,7 +9,7 @@
     init: function() {
       var newpos = document.getElementById(this.data.slotID).getAttribute("position");
       this.el.setAttribute("position", newpos);
-      console.log("Slot assigned:", this.data.slotNum);
+      console.log("Slot assigned:", this.data.slotID);
     }
   });
 
@@ -20,94 +20,46 @@
 
   AFRAME.registerComponent('enemy', {
     init: function() {
-      this.lifePoints = 42;
+	var el = this.el;
+    	el.addEventListener('mouseenter', function () {
+		el.setAttribute('visible', false);
+		el.emit('kill')
+	});
+    }
+  });
+
+  AFRAME.registerComponent('enemy-pool', {
+    init: function() {
+	var el = this.el;
+	for (var i=0; i<7; i++){
+		var enemy = document.createElement("a-obj-model")
+		enemy.setAttribute("src", "#monster-obj")
+		enemy.setAttribute("mtl", "#monster-mtl")
+		enemy.setAttribute("rotation", "0 180 0")
+		var scaleFactor = Math.random()+5
+		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
+		var dur = Math.random()*20000
+		var delay = 5000 + Math.random()*5000
+		enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";")
+		enemy.setAttribute("enemy", "")
+		enemy.addEventListener('movingended', function () {
+			if (enemy.getAttribute("visible"))
+				document.querySelector("[goal]").emit("hit")
+			});
+		enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)")
+		this.el.appendChild(enemy)
+	}
     }
   });
 
 })()
+
 },{}],3:[function(require,module,exports){
-(function(){
-  "use strict";
-
-  /**
-   * Loads and setup ground model.
-   * @param  {[type]} ) {                 var objectLoader;      var object3D [description]
-   * @return {[type]}   [description]
-   */
-  AFRAME.registerComponent('ground', {
-    init: function () {
-      var objectLoader;
-      var object3D = this.el.object3D;
-      var MODEL_URL = 'https://cdn.aframe.io/link-traversal/models/ground.json';
-      if (this.objectLoader) { return; }
-      objectLoader = this.objectLoader = new THREE.ObjectLoader();
-      objectLoader.crossOrigin = '';
-      objectLoader.load(MODEL_URL, function (obj) {
-        obj.children.forEach(function (value) {
-          value.receiveShadow = true;
-          value.material.shading = THREE.FlatShading;
-        });
-        object3D.add(obj);
-      });
-    }
-  });
-
-  /**
-   * Load the sky gradient for the skybox
-   * @param  {[type]} 'skyGradient'   [description]
-   * @param  {[type]} options.schema: {                                                       colorTop: {   type:            'color',      default: 'black', is:           'uniform' [description]
-   * @param  {[type]} colorBottom:    {            type:         'color', default: 'red', is: 'uniform' }                                           }       [description]
-   * @param  {[type]} vertexShader:   [                                                        'varying  vec3 vWorldPosition;' [description]
-   * @param  {[type]} 'void           main(         [description]
-   * @return {[type]}                 [description]
-   */
-  AFRAME.registerShader('skyGradient', {
-    schema: {
-      colorTop: { type: 'color', default: 'black', is: 'uniform' },
-      colorBottom: { type: 'color', default: 'red', is: 'uniform' }
-    },
-
-    vertexShader: [
-      'varying vec3 vWorldPosition;',
-
-      'void main() {',
-
-        'vec4 worldPosition = modelMatrix * vec4( position, 1.0 );',
-        'vWorldPosition = worldPosition.xyz;',
-
-        'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
-
-      '}'
-
-    ].join('\n'),
-
-    fragmentShader: [
-      'uniform vec3 colorTop;',
-      'uniform vec3 colorBottom;',
-
-      'varying vec3 vWorldPosition;',
-
-      'void main()',
-
-      '{',
-        'vec3 pointOnSphere = normalize(vWorldPosition.xyz);',
-        'float f = 1.0;',
-        'if(pointOnSphere.y > - 0.2){',
-
-          'f = sin(pointOnSphere.y * 2.0);',
-
-        '}',
-        'gl_FragColor = vec4(mix(colorBottom,colorTop, f ), 1.0);',
-
-      '}'
-    ].join('\n')
-  });
-})();
-},{}],4:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 (function(){
   "use strict";
+  require("./presentation.js");
 
 
   AFRAME.registerComponent('game-client', {
@@ -215,6 +167,9 @@
       player.setAttribute("assign-slot", { slotID : this.clientState.slotID});
       player.setAttribute("camera", {});
       player.setAttribute("look-controls", {});
+      player.setAttribute("presentation-display", {});
+      var cursor = document.createElement("a-cursor");
+      player.appendChild(cursor);
 
       document.querySelector("a-scene").appendChild(player);
     }
@@ -222,7 +177,51 @@
 
 })()
 
+},{"./presentation.js":5}],4:[function(require,module,exports){
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent('goal', {
+    init: function() {
+	var el = this.el;
+	var life = document.createElement("a-cylinder")
+	life.setAttribute("color", "green")
+	life.setAttribute("height", "10")
+	life.setAttribute("position", "0 0 -30")
+	el.appendChild(life)
+
+	// could have also used a component function
+    	el.addEventListener('hit', function () {
+		var height = parseInt( life.getAttribute("height") )
+		height -= 1
+		life.setAttribute("height", height)
+		if (height < 5) 
+			life.setAttribute("color", "red")
+	});
+    },
+  });
+
+})()
+
 },{}],5:[function(require,module,exports){
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent('presentation-display', {
+    init: function() {
+    	var el = this.el;
+    	var text = document.createElement("a-text")
+    	var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!"
+    	text.setAttribute("color", "brown")
+    	text.setAttribute("value", content)
+    	text.setAttribute("position", "-1 0.5 -0.3")
+    	el.appendChild(text)
+    },
+  });
+
+})()
+
+},{}],6:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 var WVRD = {};
@@ -231,12 +230,12 @@ var WVRD = {};
 
   require("../lib/networked-aframe.js");
   var Util         = require("./util.js");
-  require("./components/environment.js");
   require("./components/assign_slot.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
+  require("./components/goal.js");
 
-  window.onConnectCB = function(){
+  window.onConnectCB = function(data){
     document.querySelector("[game-client]").components["game-client"].initClient();
   }
 
@@ -254,42 +253,11 @@ var WVRD = {};
     (document.querySelector("a-scene").hasLoaded ? onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", onSceneLoaded));
   };
 })();
-},{"../lib/networked-aframe.js":7,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/environment.js":3,"./components/gameClient.js":4,"./util.js":6}],6:[function(require,module,exports){
+
+},{"../lib/networked-aframe.js":8,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./util.js":7}],7:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
-  /**
-   * Check if user is on mobile
-   * Useful for needed user interaction for media video/audio
-   * @return {Boolean} if user is on mobile
-   */
-  Util.isMobile = function() {
-    let check = false;
-    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true})(navigator.userAgent||navigator.vendor||window.opera);
-    return check;
-  };
-
-  /**
-   * Analyse an URL search part, look for 'varToExtract=somevalue' in the string
-   * @param  {[type]} varToExtract variable we want to extract from the URL
-   * @return {[type]} the value associated to the varToExtract, or null if nothing was found
-   */
-  Util.extractFromUrl = function(varToExtract){
-    return new Promise((resolve, reject) => {
-      try{
-        let parser  = document.createElement('a');
-        parser.href = location.href;
-        let value   = parser.search.substring(1).split("&").filter(function(cell){ return (cell.indexOf(varToExtract + "=") !== -1);});
-        value       = (value.length > 0 ? value[0].split("=") : null);
-
-        resolve(value && value.length > 0 ? value[1] || null : null);
-      }
-      catch(err){
-        reject(err);
-      }
-    })
-  };
-
   /**
    * Generate an Unique ID
    * @return {string} Unique ID of length 4
@@ -305,7 +273,8 @@ var Util = {};
 })()
 
 module.exports = Util;
-},{}],7:[function(require,module,exports){
+
+},{}],8:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -3876,4 +3845,4 @@ module.exports = Util;
 
 /***/ })
 /******/ ]);
-},{}]},{},[5]);
+},{}]},{},[6]);

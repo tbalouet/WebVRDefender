@@ -8,7 +8,7 @@
     init: function() {
       var newpos = document.getElementById(this.data.slotID).getAttribute("position");
       this.el.setAttribute("position", newpos);
-      console.log("Slot assigned:", this.data.slotNum);
+      console.log("Slot assigned:", this.data.slotID);
     }
   });
 

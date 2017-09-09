@@ -14,7 +14,9 @@ npm run dev  # Start the local development server on http://localhost:3000
 Javascript bundling
 ------------------------------
 This project uses browserify. Once the server launched, it automatically bundles the files required from /client/js/main.js
+
 The bundled file is /public/js/script.js
+
 To add a file, you need to add ``require("/path/to/my/file.js");``
 If you want to import a class, the class file will need to have ``module.exports = MyClassName`` at the end of it, then you can use 
 ```
@@ -48,3 +50,13 @@ Folder Structure
    * css files
  * `/views/`
    * ejs template files folder. Contains index.ejs, main file of the Web App
+
+Attributions
+----------------
+
+3D models in winter theme by Aime
+Sounds
+  http://soundbible.com/1810-Wind.html
+  http://soundbible.com/1771-Laser-Cannon.html
+  http://soundbible.com/1033-Zombie-In-Pain.html
+
