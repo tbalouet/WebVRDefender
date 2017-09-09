@@ -88,7 +88,7 @@
 	var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!"
 	text.setAttribute("color", "brown")
 	text.setAttribute("value", content)
-	text.setAttribute("position", "-0.5 1 -3")
+	text.setAttribute("position", "-1 0.5 -0.3")
 	el.appendChild(text)
     },
   });
