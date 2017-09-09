@@ -25,6 +25,8 @@
   <!-- <script src="https://unpkg.com/networked-aframe/dist/networked-aframe.min.js"></script> -->
   <script src="https://unpkg.com/networked-aframe/dist/networked-aframe.js"></script>
   <script src="public/js/script.js"></script>
+  <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
+  <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
 </head>
 <body>
   <!-- MENUBAR -->
@@ -46,10 +48,14 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene fog="color: #bc483e; near: 0; far: 65;" networked-scene="app: myApp;room: room1;debug: true;onConnect: onConnectCB;">
+  <a-scene fog="color: white; near: 0; far: 85;" networked-scene="app: myApp;room: room1;debug: true;onConnect: onConnectCB;">
     <a-assets>
-      <a-asset-item id="monster" src="public/assets/models/monster.dae"></a-assets-item>
-      <!-- Should replace with https://github.com/mrdoob/three.js/blob/master/examples/webgl_loader_json_blender.html -->
+      <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
+      <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
+      <a-asset-item id="terrain-obj" src="public/assets/models/terrain/model.obj"></a-assets-item>
+      <a-asset-item id="terrain-mtl" src="public/assets/models/terrain/materials.mtl"></a-assets-item>
+      <a-asset-item id="turet-obj" src="public/assets/models/turet/model.obj"></a-assets-item>
+      <a-asset-item id="turet-mtl" src="public/assets/models/turet/materials.mtl"></a-assets-item>
 
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
@@ -58,13 +64,30 @@
       </script>
     </a-assets>
 
-    <a-entity id="slot0" position="-5 0 -5"></a-entity>
-    <a-entity id="slot1" position="5 0 -5"></a-entity>
-    <a-entity id="slot2" position="-5 0 5"></a-entity>
-    <a-entity id="slot3" position="5 0 5"></a-entity>
+    <a-curve id="monster-track">
+      <a-curve-point position="10 -6 -59"></a-curve-point>
+      <a-curve-point position="18 0 -29"></a-curve-point>
+      <a-curve-point position="20 2 0"></a-curve-point>
+      <a-curve-point position="-21 -2 22"></a-curve-point>
+      <a-curve-point position="-4 -1 67"></a-curve-point>
+    </a-curve>
+    
+    <a-entity id="slot0" position="-5 10 -5">
+	    <a-obj-model src="#turet-obj" mtl="#turet-mtl" scale="5 5 5"></a-obj-model>
+    </a-entity>
+    <a-entity id="slot1" position="50 33 -40">
+	    <a-obj-model src="#turet-obj" mtl="#turet-mtl" scale="5 5 5"></a-obj-model>
+    </a-entity>
+    <a-entity id="slot2" position="25 20 35">
+	    <a-obj-model src="#turet-obj" mtl="#turet-mtl" scale="5 5 5"></a-obj-model>
+    </a-entity>
+    <a-entity id="slot3" position="-60 51 34">
+	    <a-obj-model src="#turet-obj" mtl="#turet-mtl" scale="5 5 5"></a-obj-model>
+    </a-entity>
 
+    <a-obj-model src="#terrain-obj" mtl="#terrain-mtl" position="0 11 0" scale="100 100 100"></a-obj-model>
+    <a-obj-model src="#monster-obj" mtl="#monster-mtl" alongpath="curve: #monster-track; loop:true; dur:10000;"></a-obj-model>
 
-    <a-entity collada-model="#monster" scale="0.05 0.05 0.05" rotation="0 -90 0" position="-5 0 -15"></a-entity>
 
     <a-sky color="#3f51b5"></a-sky>
   </a-scene>
