@@ -17,7 +17,11 @@
       this.el.setAttribute("look-controls", {});
       this.el.setAttribute("presentation-display", {});
 
-      var cursor = document.createElement("a-cursor");
+      var cursor = document.createElement("a-entity");
+      cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 200")
+      cursor.setAttribute("position", "0 0 -12")
+      cursor.setAttribute("geometry", "primitive: ring")
+      cursor.setAttribute("material", "color: black; shader: flat")
       this.el.appendChild(cursor);
 
 

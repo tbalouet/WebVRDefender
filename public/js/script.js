@@ -21,7 +21,7 @@
   AFRAME.registerComponent('enemy', {
     init: function() {
 	var el = this.el;
-    	el.addEventListener('mouseenter', function () {
+    	el.addEventListener('click', function () {
 		el.setAttribute('visible', false);
 		el.emit('kill')
 	});
@@ -214,7 +214,11 @@
       this.el.setAttribute("look-controls", {});
       this.el.setAttribute("presentation-display", {});
 
-      var cursor = document.createElement("a-cursor");
+      var cursor = document.createElement("a-entity");
+      cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 200")
+      cursor.setAttribute("position", "0 0 -12")
+      cursor.setAttribute("geometry", "primitive: ring")
+      cursor.setAttribute("material", "color: black; shader: flat")
       this.el.appendChild(cursor);
 
 
@@ -231,6 +235,7 @@
   });
 
 })()
+
 },{}],6:[function(require,module,exports){
 (function(){
   "use strict";
