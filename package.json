@@ -13,12 +13,14 @@
   },
   "scripts": {
     "dev": "concurrently \"nodemon --inspect server.js NODE_ENV=dev\" \"watchify client/js/main.js -o public/js/script.js -v\" ",
-    "watch": "watchify client/js/main.js -o public/js/script.js -v"
+    "watch": "watchify client/js/main.js -o public/js/script.js -v",
+    "lint": "eslint -f html --color --fix client/js/** -o linterrors.html"
   },
   "author": "",
   "license": "Apache 2.0",
   "dependencies": {
     "express": "^4.13.4",
+    "lint": "^1.1.2",
     "networked-aframe": "^0.2.3",
     "socket.io": "^2.0.3"
   }

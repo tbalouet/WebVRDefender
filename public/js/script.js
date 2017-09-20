@@ -1,140 +1,138 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* global AFRAME */
 (function(){
-  "use strict";
+    "use strict";
 
-  AFRAME.registerComponent('assign-slot', {
-    schema: {
-      slotID: { type: 'string', default: "" },
-    },
-    init: function() {
-      var newpos = document.getElementById(this.data.slotID).getAttribute("position");
-      this.el.setAttribute("position", newpos);
-      console.log("Slot assigned:", this.data.slotID);
-    }
-  });
+    AFRAME.registerComponent("assign-slot", {
+        schema: {
+            slotID: { type: "string", default: "" }
+        },
+        init: function() {
+            var newpos = document.getElementById(this.data.slotID).getAttribute("position");
+            this.el.setAttribute("position", newpos);
+            console.log("Slot assigned:", this.data.slotID);
+        }
+    });
 
-})()
+})();
 },{}],2:[function(require,module,exports){
+/* global AFRAME */
 (function(){
-  "use strict";
+    "use strict";
 
-  AFRAME.registerComponent('enemy', {
-    init: function() {
-	var el = this.el;
-    	el.addEventListener('click', function () {
-		el.setAttribute('visible', false);
-		el.emit('kill')
-	});
-    }
-  });
+    AFRAME.registerComponent("enemy", {
+        init: function() {
+            var el = this.el;
+            el.addEventListener("click", function () {
+                el.setAttribute("visible", false);
+                el.emit("kill");
+            });
+        }
+    });
 
-  AFRAME.registerComponent('enemy-pool', {
-    init: function() {
-	var el = this.el;
-	for (var i=0; i<7; i++){
-		var enemy = document.createElement("a-obj-model")
-		enemy.setAttribute("src", "#monster-obj")
-		enemy.setAttribute("mtl", "#monster-mtl")
-		enemy.setAttribute("rotation", "0 180 0")
-		var scaleFactor = Math.random()+5
-		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
-		var dur = Math.random()*20000
-		var delay = 5000 + Math.random()*5000
-		enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";")
-		enemy.setAttribute("enemy", "")
-		enemy.addEventListener('movingended', function () {
-			if (enemy.getAttribute("visible"))
-				document.querySelector("[goal]").emit("hit")
-			});
-		enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)")
-		this.el.appendChild(enemy)
-	}
-    }
-  });
+    AFRAME.registerComponent("enemy-pool", {
+        init: function() {
+            for (var i=0; i<7; i++){
+                var enemy = document.createElement("a-obj-model");
+                enemy.setAttribute("src", "#monster-obj");
+                enemy.setAttribute("mtl", "#monster-mtl");
+                enemy.setAttribute("rotation", "0 180 0");
+                var scaleFactor = Math.random()+5;
+                enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor);
+                var dur = Math.random()*20000;
+                var delay = 5000 + Math.random()*5000;
+                enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";");
+                enemy.setAttribute("enemy", "");
+                enemy.addEventListener("movingended", function () {
+                  if (enemy.getAttribute("visible"))
+                    document.querySelector("[goal]").emit("hit");
+              });
+                enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)");
+                this.el.appendChild(enemy);
+            }
+        }
+    });
 
-})()
+})();
 
 },{}],3:[function(require,module,exports){
+/* global AFRAME, NAF */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 (function(){
-  "use strict";
+    "use strict";
 
   /**
    * Handle discussions with the server and Game State
    * @return {[type]}                   [description]
    */
-  AFRAME.registerComponent('game-client', {
-    init: function() {
+    AFRAME.registerComponent("game-client", {
+        init: function() {
       //General game state with informations about all clients
-      this.gameState = undefined;
+            this.gameState = undefined;
 
       //TODO: Elaborate clientstate based on device
-      this.clientState = {
-        ID     : 0,
-        type   : "threedof",
-        slotID : undefined
-      }
-    },
+            this.clientState = {
+                ID     : 0,
+                type   : "threedof",
+                slotID : undefined
+            };
+        },
     /**
      * Init the client, called when connected to the server
      * @return {[type]} [description]
      */
-    initClient : function(){
-      var that = this;
+        initClient : function(){
+            window.onbeforeunload = this.onDisconnect.bind(this);
 
-      window.onbeforeunload = this.onDisconnect.bind(this);
+            NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
 
-      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
-
-      this.clientState.ID = NAF.clientId;
-      this.sendEvent("clientConnect", this.initialSetup.bind(this));
-    },
+            this.clientState.ID = NAF.clientId;
+            this.sendEvent("clientConnect", this.initialSetup.bind(this));
+        },
     /**
      * Send an event to the server and fetch back the Game State before broadcasting it
      * @param  {[type]}   evtName  [description]
      * @param  {Function} callback [description]
      * @return {[type]}            [description]
      */
-    sendEvent: function(evtName, callback){
-      var that = this;
-      callback = callback || function(){};
+        sendEvent: function(evtName, callback){
+            var that = this;
+            callback = callback || function(){};
 
-      NAF.connection.network.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState }, 
+            NAF.connection.network.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState }, 
         function(msgType, msgData){
-          that.gameState = msgData.gameState;
-          console.log("[Game-Client]", "Gamestate received after "+evtName, that.gameState);
+            that.gameState = msgData.gameState;
+            console.log("[Game-Client]", "Gamestate received after "+evtName, that.gameState);
 
-          setTimeout(that.sendGameStateUpdate.bind(that), 250);
+            setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
-          callback();
+            callback();
         }, function(errorCode, errorText){
-          console.log("[Game-Client]", "Error on calling server for " + evtName, errorText);
+            console.log("[Game-Client]", "Error on calling server for " + evtName, errorText);
         });
-    },
+        },
     /**
      * Function to broadcast a received update of the game state
      * @return {[type]} [description]
      */
-    sendGameStateUpdate: function(){
-      NAF.connection.broadcastDataGuaranteed("gameStateUpdate", {type : "broadcast", gameState : this.gameState});
-    },
+        sendGameStateUpdate: function(){
+            NAF.connection.broadcastDataGuaranteed("gameStateUpdate", {type : "broadcast", gameState : this.gameState});
+        },
     /**
      * Event called on window.onbeforeunload when client disconnects
      * @return {[type]} [description]
      */
-    onDisconnect : function(){
-      var that = this;
-      this.sendEvent("clientDisconnect");
-    },
+        onDisconnect : function(){
+            this.sendEvent("clientDisconnect");
+        },
     /**
      * Send game state to server when updated
      * @return {[type]} [description]
      */
-    sendGameStateToServer : function(){
-      var that = this;
-      this.sendEvent("gameStateUpdated");
-    },
+        sendGameStateToServer : function(){
+            this.sendEvent("gameStateUpdated");
+        },
     /**
      * Event received by clients when gameState is updated
      * @param  {[type]} senderID [description]
@@ -142,188 +140,193 @@
      * @param  {[type]} data     [description]
      * @return {[type]}          [description]
      */
-    onGameStateUpdate : function(senderID, msg, data){
-      this.gameState = data.gameState;
-      console.log("[Game-Client]", "Gamestate updated", this.gameState);
-    },
+        onGameStateUpdate : function(senderID, msg, data){
+            this.gameState = data.gameState;
+            console.log("[Game-Client]", "Gamestate updated", this.gameState);
+        },
     /**
      * Init player entity by checking its type
      * @return {[type]} [description]
      */
-    initialSetup : function(){
-      let player = document.createElement("a-entity");
-      player.id = "player"+Math.floor(Math.random()*50);
+        initialSetup : function(){
+            let player = document.createElement("a-entity");
+            player.id = "player"+Math.floor(Math.random()*50);
 
-      switch(this.clientState.type){
-        case "threedof":
-          let slotID = this.getUnusedSlot();
-          if(slotID){
-            player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
-          }
-          break;
-      }
+            switch(this.clientState.type){
+            case "threedof":
+                let slotID = this.getUnusedSlot();
+                if(slotID){
+                    player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
+                }
+                break;
+            }
 
-      document.querySelector("a-scene").appendChild(player);
-    },
+            document.querySelector("a-scene").appendChild(player);
+        },
     /**
      * Check list of slots against already used one
      * @return {int} returns first free slot
      */
-    getUnusedSlot : function(){
-      let slots = document.querySelector("[slot-threedof]").children;
-      let slotID = undefined;
-      for(let i = 0;i < slots.length; ++i){
-        let isTaken = false;
-        for(let clientID in this.gameState.clients){
-          if(this.gameState.clients.hasOwnProperty(clientID)){
-            let aClient = this.gameState.clients[clientID];
-            if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-              isTaken = true;
-              break;
+        getUnusedSlot : function(){
+            let slots = document.querySelector("[slot-threedof]").children;
+            let slotID = undefined;
+            for(let i = 0;i < slots.length; ++i){
+                let isTaken = false;
+                for(let clientID in this.gameState.clients){
+                    if(this.gameState.clients.hasOwnProperty(clientID)){
+                        let aClient = this.gameState.clients[clientID];
+                        if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
+                          isTaken = true;
+                          break;
+                      }
+                    }
+                }
+                if(!isTaken){
+                    slotID = slots[i].id;
+                    break;
+                }
             }
-          }
-        }
-        if(!isTaken){
-          slotID = slots[i].id;
-          break;
-        }
-      }
 
-      if(slotID){
-        this.clientState.slotID = slotID;
-        this.sendGameStateToServer();
-      }
-      return slotID;
-    }
-  });
+            if(slotID){
+                this.clientState.slotID = slotID;
+                this.sendGameStateToServer();
+            }
+            return slotID;
+        }
+    });
 
-})()
+})();
 
 },{}],4:[function(require,module,exports){
+/* global AFRAME */
 (function(){
-  "use strict";
+    "use strict";
 
-  AFRAME.registerComponent('goal', {
-    init: function() {
-	var el = this.el;
-	var life = document.createElement("a-cylinder")
-	life.setAttribute("color", "green")
-	life.setAttribute("height", "10")
-	life.setAttribute("position", "0 0 -30")
-	el.appendChild(life)
+    AFRAME.registerComponent("goal", {
+        init: function() {
+            var el = this.el;
+            var life = document.createElement("a-cylinder");
+            life.setAttribute("color", "green");
+            life.setAttribute("height", "10");
+            life.setAttribute("position", "0 0 -30");
+            el.appendChild(life);
 
-	// could have also used a component function
-    	el.addEventListener('hit', function () {
-		var height = parseInt( life.getAttribute("height") )
-		height -= 1
-		life.setAttribute("height", height)
-		if (height < 5) 
-			life.setAttribute("color", "red")
-	});
-    },
-  });
+        // could have also used a component function
+            el.addEventListener("hit", function () {
+                var height = parseInt( life.getAttribute("height") );
+                height -= 1;
+                life.setAttribute("height", height);
+                if (height < 5) 
+                  life.setAttribute("color", "red");
+            });
+        }
+    });
 
-})()
+})();
 
 },{}],5:[function(require,module,exports){
+/* global AFRAME */
 (function(){
-  "use strict";
+    "use strict";
 
-  AFRAME.registerComponent('player', {
-    schema: {
-      slotID: { type: 'string', default: "" },
-      type: { type: 'string', default: "" },
-    },
-    init: function() {      
-      this.el.setAttribute("networked", {
-        template          : "#tower-template",
-        showLocalTemplate : false
-      });
+    AFRAME.registerComponent("player", {
+        schema: {
+            slotID: { type: "string", default: "" },
+            type: { type: "string", default: "" }
+        },
+        init: function() {      
+            this.el.setAttribute("networked", {
+                template          : "#tower-template",
+                showLocalTemplate : false
+            });
 
-      this.el.setAttribute("assign-slot", { slotID : this.data.slotID});
-      this.el.setAttribute("camera", {});
-      this.el.setAttribute("look-controls", {});
-      this.el.setAttribute("presentation-display", {});
+            this.el.setAttribute("assign-slot", { slotID : this.data.slotID});
+            this.el.setAttribute("camera", {});
+            this.el.setAttribute("look-controls", {});
+            this.el.setAttribute("presentation-display", {});
 
-      var cursor = document.createElement("a-entity");
-      cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 200")
-      cursor.setAttribute("position", "0 0 -12")
-      cursor.setAttribute("geometry", "primitive: ring")
-      cursor.setAttribute("material", "color: black; shader: flat")
-      this.el.appendChild(cursor);
+            var cursor = document.createElement("a-entity");
+            cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 200");
+            cursor.setAttribute("position", "0 0 -12");
+            cursor.setAttribute("geometry", "primitive: ring");
+            cursor.setAttribute("material", "color: black; shader: flat");
+            this.el.appendChild(cursor);
 
 
-      let mesh = document.createElement("a-entity");
-      switch(this.data.type){
-        case "threedof":
-          mesh.setAttribute("obj-model", {obj: "#turet-obj", mtl: "#turet-mtl"});
-          mesh.setAttribute("position", "0 -0.5 0");
-          mesh.setAttribute("rotation", "0 180 0");
-          break;
-      }
-      this.el.appendChild(mesh);
-    }
-  });
+            let mesh = document.createElement("a-entity");
+            switch(this.data.type){
+            case "threedof":
+                mesh.setAttribute("obj-model", {obj: "#turet-obj", mtl: "#turet-mtl"});
+                mesh.setAttribute("position", "0 -0.5 0");
+                mesh.setAttribute("rotation", "0 180 0");
+                break;
+            }
+            this.el.appendChild(mesh);
+        }
+    });
 
-})()
+})();
 
 },{}],6:[function(require,module,exports){
+/* global AFRAME */
 (function(){
-  "use strict";
+    "use strict";
 
-  AFRAME.registerComponent('presentation-display', {
-    init: function() {
-    	var el = this.el;
-    	var text = document.createElement("a-text")
-    	var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!"
-    	text.setAttribute("color", "brown")
-    	text.setAttribute("value", content)
-    	text.setAttribute("position", "-1 0.5 -3")
-    	el.appendChild(text)
-	window.setTimeout( function() { text.setAttribute("visible", "false") }, 5000 )
-    },
-  });
+    AFRAME.registerComponent("presentation-display", {
+        init: function() {
+            var el = this.el;
+            var text = document.createElement("a-text");
+            var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!";
+            text.setAttribute("color", "brown");
+            text.setAttribute("value", content);
+            text.setAttribute("position", "-1 0.5 -3");
+            el.appendChild(text);
+            window.setTimeout( function() { text.setAttribute("visible", "false"); }, 5000 );
+        }
+    });
 
-})()
+})();
 
 },{}],7:[function(require,module,exports){
+/* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 var WVRD = {};
 (function(){
-	"use strict";
+    "use strict";
 
-  require("../lib/networked-aframe.js");
-  require("./components/assign_slot.js");
-  require("./components/enemy.js");
-  require("./components/gameClient.js");
-  require("./components/goal.js");
-  require("./components/presentation.js");
-  require("./components/player.js");
+    require("../lib/networked-aframe.js");
+    require("./components/assign_slot.js");
+    require("./components/enemy.js");
+    require("./components/gameClient.js");
+    require("./components/goal.js");
+    require("./components/presentation.js");
+    require("./components/player.js");
 
   /**
    * Callback called on Networked AFrame server connect
    * @param  {[type]} data [description]
    * @return {[type]}      [description]
    */
-  window.onConnectCB = function(data){
-    document.querySelector("[game-client]").components["game-client"].initClient();
-  }
+    window.onConnectCB = function(){
+        document.querySelector("[game-client]").components["game-client"].initClient();
+    };
 
-  window.onload = function(){
-    function onSceneLoaded(){
-      //Fetch the room name in the URL or puts you in room42
-      let room = AFRAME.utils.getUrlParameter("room");
-      if(!room){
-        room = "room42";
-        console.log("======== JOIN DA ROOM: localhost:3000/?room="+room+" ========");
-      }
-      document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
+    window.onload = function(){
+        function onSceneLoaded(){
+          //Fetch the room name in the URL or puts you in room42
+            let room = AFRAME.utils.getUrlParameter("room");
+            if(!room){
+                room = "room42";
+                console.log("======== JOIN DA ROOM: localhost:3000/?room="+room+" ========");
+            }
+            document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
 
-      document.getElementById("loaderDiv").classList.remove('make-container--visible');
-    }
-    (document.querySelector("a-scene").hasLoaded ? onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", onSceneLoaded));
-  };
+            document.getElementById("loaderDiv").classList.remove("make-container--visible");
+            WVRD.loaded = true;
+        }
+        (document.querySelector("a-scene").hasLoaded ? onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", onSceneLoaded));
+    };
 })();
 
 },{"../lib/networked-aframe.js":8,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./components/player.js":5,"./components/presentation.js":6}],8:[function(require,module,exports){
