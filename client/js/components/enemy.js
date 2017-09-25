@@ -26,9 +26,9 @@
                 enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";");
                 enemy.setAttribute("enemy", "");
                 enemy.addEventListener("movingended", function () {
-                  if (enemy.getAttribute("visible"))
-                    document.querySelector("[goal]").emit("hit");
-              });
+                    if (enemy.getAttribute("visible"))
+                        document.querySelector("[goal]").emit("hit");
+                });
                 enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)");
                 this.el.appendChild(enemy);
             }

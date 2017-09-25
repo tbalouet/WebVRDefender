@@ -17,7 +17,7 @@
                 height -= 1;
                 life.setAttribute("height", height);
                 if (height < 5) 
-                  life.setAttribute("color", "red");
+                    life.setAttribute("color", "red");
             });
         }
     });

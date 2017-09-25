@@ -118,9 +118,9 @@
                     if(this.gameState.clients.hasOwnProperty(clientID)){
                         let aClient = this.gameState.clients[clientID];
                         if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-                          isTaken = true;
-                          break;
-                      }
+                            isTaken = true;
+                            break;
+                        }
                     }
                 }
                 if(!isTaken){

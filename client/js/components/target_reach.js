@@ -81,12 +81,12 @@
                     // score--; //clean up
           //console.log("score before hit", score);
                         if (life>1){
-                          life--; //actual decrease of score
-                          let channel = getChannel();
-                          firebase.database().ref(channel + "/score" ).set({life:life});
-                      } else {
-                          console.log("You loose");
-                      }
+                            life--; //actual decrease of score
+                            let channel = getChannel();
+                            firebase.database().ref(channel + "/score" ).set({life:life});
+                        } else {
+                            console.log("You loose");
+                        }
                     }
                 });
         
