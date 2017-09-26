@@ -5,13 +5,12 @@ var WVRD = {};
 (function(){
     "use strict";
 
-    require("../lib/networked-aframe.js");
-    require("./components/assign_slot.js");
-    require("./components/enemy.js");
-    require("./components/gameClient.js");
-    require("./components/goal.js");
-    require("./components/presentation.js");
-    require("./components/player.js");
+  require("../lib/networked-aframe.js");
+  require("./components/assign_slot.js");
+  require("./components/enemy.js");
+  require("./components/gameClient.js");
+  require("./components/goal.js");
+  require("./components/gameDynamicsParameters.js");
 
   /**
    * Callback called on Networked AFrame server connect

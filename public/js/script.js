@@ -30,28 +30,55 @@
         }
     });
 
-    AFRAME.registerComponent("enemy-pool", {
-        init: function() {
-            for (var i=0; i<7; i++){
-                var enemy = document.createElement("a-obj-model");
-                enemy.setAttribute("src", "#monster-obj");
-                enemy.setAttribute("mtl", "#monster-mtl");
-                enemy.setAttribute("rotation", "0 180 0");
-                var scaleFactor = Math.random()+5;
-                enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor);
-                var dur = Math.random()*20000;
-                var delay = 5000 + Math.random()*5000;
-                enemy.setAttribute("alongpath", "curve: #monster-track; delay:" + delay + "; dur:"+dur+";");
-                enemy.setAttribute("enemy", "");
-                enemy.addEventListener("movingended", function () {
-                  if (enemy.getAttribute("visible"))
-                    document.querySelector("[goal]").emit("hit");
-              });
-                enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)");
-                this.el.appendChild(enemy);
-            }
-        }
-    });
+  AFRAME.registerComponent('enemy-pool', {
+    init: function() {
+	var enemyTypes = [ "monster", "dragon" ]
+	var type
+	var el = this.el;
+
+	// wave 1
+	type = enemyTypes[0]
+	for (var i=0; i<7; i++){
+		var enemy = document.createElement("a-obj-model")
+		enemy.setAttribute("src", "#"+type+"-obj")
+		enemy.setAttribute("mtl", "#"+type+"-mtl")
+		enemy.setAttribute("rotation", "0 180 0")
+		var scaleFactor = Math.random()+5
+		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
+		var dur = Math.random()*20000
+		var delay = 5000 + Math.random()*5000
+		enemy.setAttribute("alongpath", "curve: #"+type+"-track; delay:" + delay + "; dur:"+dur+";")
+		enemy.setAttribute("enemy", "")
+		enemy.addEventListener('movingended', function () {
+			if (enemy.getAttribute("visible"))
+				document.querySelector("[goal]").emit("hit")
+			});
+		enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3)")
+		this.el.appendChild(enemy)
+	}
+
+	// wave 2
+	type = enemyTypes[1]
+	for (var i=0; i<3; i++){
+		var enemy = document.createElement("a-obj-model")
+		enemy.setAttribute("src", "#"+type+"-obj")
+		enemy.setAttribute("mtl", "#"+type+"-mtl")
+		enemy.setAttribute("rotation", "0 0 0")
+		var scaleFactor = Math.random()+3
+		enemy.setAttribute("scale", scaleFactor + " " + scaleFactor + " " + scaleFactor)
+		var dur = Math.random()*20000
+		var delay = 5000 + Math.random()*5000
+		enemy.setAttribute("alongpath", "rotate:true ; curve: #"+type+"-track; delay:" + delay + "; dur:"+dur+";")
+		enemy.setAttribute("enemy", "")
+		enemy.addEventListener('movingended', function () {
+			if (enemy.getAttribute("visible"))
+				document.querySelector("[goal]").emit("hit")
+			});
+		enemy.setAttribute("sound", "on: kill; src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/European_Dragon_Roaring_and_breathe_fire-daniel-simon.mp3)")
+		this.el.appendChild(enemy)
+	}
+    }
+  });
 
 })();
 
@@ -176,9 +203,9 @@
                     if(this.gameState.clients.hasOwnProperty(clientID)){
                         let aClient = this.gameState.clients[clientID];
                         if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-                          isTaken = true;
-                          break;
-                      }
+                            isTaken = true;
+                            break;
+                        }
                     }
                 }
                 if(!isTaken){
@@ -198,96 +225,70 @@
 })();
 
 },{}],4:[function(require,module,exports){
-/* global AFRAME */
 (function(){
-    "use strict";
+  "use strict";
 
-    AFRAME.registerComponent("goal", {
-        init: function() {
-            var el = this.el;
-            var life = document.createElement("a-cylinder");
-            life.setAttribute("color", "green");
-            life.setAttribute("height", "10");
-            life.setAttribute("position", "0 0 -30");
-            el.appendChild(life);
+  AFRAME.registerComponent('game-dynamics-parameters', {
+    init: function() {
+	console.log("game parameters loaded but empty")
+    },
+  });
 
-        // could have also used a component function
-            el.addEventListener("hit", function () {
-                var height = parseInt( life.getAttribute("height") );
-                height -= 1;
-                life.setAttribute("height", height);
-                if (height < 5) 
-                  life.setAttribute("color", "red");
-            });
-        }
-    });
-
-})();
+})()
 
 },{}],5:[function(require,module,exports){
 /* global AFRAME */
 (function(){
     "use strict";
 
-    AFRAME.registerComponent("player", {
-        schema: {
-            slotID: { type: "string", default: "" },
-            type: { type: "string", default: "" }
-        },
-        init: function() {      
-            this.el.setAttribute("networked", {
-                template          : "#tower-template",
-                showLocalTemplate : false
-            });
+  AFRAME.registerComponent('goal', {
+    init: function() {
+	var obj = "model.obj"
+	var mtl = "materials.mtl"
+	var path="public/assets/models/castle/"
+	var el = this.el;
+	var mesh = document.createElement("a-obj-model")
+	mesh.setAttribute("id", "goal-mesh")
+	mesh.setAttribute("src", path+obj)
+	mesh.setAttribute("mtl", path+mtl)
+	el.appendChild(mesh)
+	var life = document.createElement("a-cylinder")
+	// now to rescale because of parent
+	life.setAttribute("color", "green")
+	life.setAttribute("height", "10")
+	life.setAttribute("scale", "0.05 0.05 0.05")
+	life.setAttribute("position", "0 0 0")
+	el.appendChild(life)
 
-            this.el.setAttribute("assign-slot", { slotID : this.data.slotID});
-            this.el.setAttribute("camera", {});
-            this.el.setAttribute("look-controls", {});
-            this.el.setAttribute("presentation-display", {});
-
-            var cursor = document.createElement("a-entity");
-            cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 200");
-            cursor.setAttribute("position", "0 0 -12");
-            cursor.setAttribute("geometry", "primitive: ring");
-            cursor.setAttribute("material", "color: black; shader: flat");
-            this.el.appendChild(cursor);
-
-
-            let mesh = document.createElement("a-entity");
-            switch(this.data.type){
-            case "threedof":
-                mesh.setAttribute("obj-model", {obj: "#turet-obj", mtl: "#turet-mtl"});
-                mesh.setAttribute("position", "0 -0.5 0");
-                mesh.setAttribute("rotation", "0 180 0");
-                break;
-            }
-            this.el.appendChild(mesh);
-        }
-    });
+	// could have also used a component function
+    	el.addEventListener('hit', function () {
+		var height = parseInt( life.getAttribute("height") )
+		height -= 1
+		life.setAttribute("height", height)
+		if (height < 6) {
+			path="public/assets/models/castle_lvl1/"
+			mesh.setAttribute("src", path+obj)
+			mesh.setAttribute("mtl", path+mtl)
+		}
+		if (height < 3) {
+			life.setAttribute("color", "red")
+			path="public/assets/models/castle_lvl2/"
+			mesh.setAttribute("src", path+obj)
+			mesh.setAttribute("mtl", path+mtl)
+		}
+		if (height < 1) {
+			life.setAttribute("color", "red")
+			path="public/assets/models/castle_lvl3/"
+			mesh.setAttribute("src", path+obj)
+			mesh.setAttribute("mtl", path+mtl)
+		}
+	});
+    },
+  });
 
 })();
 
 },{}],6:[function(require,module,exports){
-/* global AFRAME */
-(function(){
-    "use strict";
-
-    AFRAME.registerComponent("presentation-display", {
-        init: function() {
-            var el = this.el;
-            var text = document.createElement("a-text");
-            var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!";
-            text.setAttribute("color", "brown");
-            text.setAttribute("value", content);
-            text.setAttribute("position", "-1 0.5 -3");
-            el.appendChild(text);
-            window.setTimeout( function() { text.setAttribute("visible", "false"); }, 5000 );
-        }
-    });
-
-})();
-
-},{}],7:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -295,13 +296,12 @@ var WVRD = {};
 (function(){
     "use strict";
 
-    require("../lib/networked-aframe.js");
-    require("./components/assign_slot.js");
-    require("./components/enemy.js");
-    require("./components/gameClient.js");
-    require("./components/goal.js");
-    require("./components/presentation.js");
-    require("./components/player.js");
+  require("../lib/networked-aframe.js");
+  require("./components/assign_slot.js");
+  require("./components/enemy.js");
+  require("./components/gameClient.js");
+  require("./components/goal.js");
+  require("./components/gameDynamicsParameters.js");
 
   /**
    * Callback called on Networked AFrame server connect
@@ -329,7 +329,7 @@ var WVRD = {};
     };
 })();
 
-},{"../lib/networked-aframe.js":8,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/goal.js":4,"./components/player.js":5,"./components/presentation.js":6}],8:[function(require,module,exports){
+},{"../lib/networked-aframe.js":7,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5}],7:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -3900,4 +3900,4 @@ var WVRD = {};
 
 /***/ })
 /******/ ]);
-},{}]},{},[7]);
+},{}]},{},[6]);

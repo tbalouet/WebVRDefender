@@ -54,9 +54,11 @@ Folder Structure
 Attributions
 ----------------
 
-3D models in winter theme by Aime
-Sounds
-  http://soundbible.com/1810-Wind.html
-  http://soundbible.com/1771-Laser-Cannon.html
-  http://soundbible.com/1033-Zombie-In-Pain.html
-
+* 3D models
+ * winter theme by Aime
+ * polluation theme by Erica Layton (not yet integrated) https://github.com/321c4
+* Sounds
+ * http://soundbible.com/1810-Wind.html
+ * http://soundbible.com/1771-Laser-Cannon.html
+ * http://soundbible.com/1033-Zombie-In-Pain.html
+ * http://soundbible.com/2127-Dragon-Fire-Breath-and-Roar.html
