@@ -15,12 +15,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="WebVR Defender">
   <link rel="apple-touch-icon" href="public/assets/icons/icon-128x128.png">
-  
+
   <meta name="msapplication-TileImage" content="public/assets/icons/icon-128x128.png">
-  <meta name="msapplication-TileColor" content="#2F3BA2">  
-  
+  <meta name="msapplication-TileColor" content="#2F3BA2">
+
   <script src="public/js/socket.io.js"></script>
-  <script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
+  <script src="https://aframe.io/releases/0.6.1/aframe.js"></script>
   <script src="public/js/easyrtc.js"></script>
   <script src="public/js/script.js"></script>
   <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
@@ -64,6 +64,9 @@
         <a-entity class="tower">
           <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" rotation="0 180 0" scale="3 3 3"></a-entity>
         </a-entity>
+      </script>
+      <script id="enemy-template" type="text/html">
+        <a-entity class="enemy"><a-sphere color="gree"></a-sphere></a-entity>
       </script>
     </a-assets>
     <a-entity sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); autoplay: true; loop:true;"></a-entity>
