@@ -8,7 +8,7 @@
   * Handle discussions with the server and Game State
   * @return {[type]}                   [description]
   */
-  AFRAME.registerComponent("game-client", {
+  AFRAME.registerComponent("wvrtd-game-client", {
     init: function() {
       //General game state with informations about all clients
       this.gameState = undefined;
@@ -42,16 +42,16 @@
       var that = this;
       callback = callback || function(){};
 
-      NAF.connection.network.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState },
+      NAF.connection.adapter.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState },
         function(msgType, msgData){
           that.gameState = msgData.gameState;
-          console.log("[Game-Client]", "Gamestate received after "+evtName, that.gameState);
+          console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
 
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
           callback();
         }, function(errorCode, errorText){
-          console.log("[Game-Client]", "Error on calling server for " + evtName, errorText);
+          console.log("[WVRTD-Game-Client]", "Error on calling server for " + evtName, errorText);
         });
       },
       /**
@@ -84,7 +84,7 @@
       */
       onGameStateUpdate : function(senderID, msg, data){
         this.gameState = data.gameState;
-        console.log("[Game-Client]", "Gamestate updated", this.gameState);
+        console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
       },
       /**
       * Init player entity by checking its type
@@ -98,19 +98,30 @@
           case "threedof":
           let slotID = this.getUnusedSlot();
           if(slotID){
-            player.setAttribute("player", { slotID : this.clientState.slotID, type : this.clientState.type});
+            player.setAttribute("wvrtd-player", { slotID : this.clientState.slotID, type : this.clientState.type});
           }
           break;
         }
 
         document.querySelector("a-scene").appendChild(player);
+
+        if(Object.values(this.gameState.clients).length === 1){
+          let enemyPool = document.createElement("a-entity");
+          enemyPool.setAttribute("wvrtd-enemy-pool", "");
+          document.querySelector("a-scene").appendChild(enemyPool);
+        }
+        else{
+          document.body.addEventListener('entityCreated', function (entity) {
+            console.log("[Game Client]", "Entity created by NAF", entity);
+          });
+        }
       },
       /**
       * Check list of slots against already used one
       * @return {int} returns first free slot
       */
       getUnusedSlot : function(){
-        let slots = document.querySelector("[slot-threedof]").children;
+        let slots = document.querySelector("[wvrtd-slot-threedof]").children;
         let slotID = undefined;
         for(let i = 0;i < slots.length; ++i){
           let isTaken = false;

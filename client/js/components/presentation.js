@@ -2,7 +2,7 @@
 (function(){
   "use strict";
 
-  AFRAME.registerComponent("presentation-display", {
+  AFRAME.registerComponent("wvrtd-presentation-display", {
     init: function() {
       var el = this.el;
       var text = document.createElement("a-text");

@@ -2,49 +2,64 @@
 (function(){
   "use strict";
 
-  AFRAME.registerComponent('goal', {
+  AFRAME.registerComponent('wvrtd-goal', {
+    schema: {
+      life: { type: "number", default: 10 }
+    },
     init: function() {
-      var obj = "model.obj"
-      var mtl = "materials.mtl"
-      var path="public/assets/models/castle/"
-      var el = this.el;
-      var mesh = document.createElement("a-obj-model")
-      mesh.setAttribute("id", "goal-mesh")
-      mesh.setAttribute("src", path+obj)
-      mesh.setAttribute("mtl", path+mtl)
-      el.appendChild(mesh)
-      var life = document.createElement("a-cylinder")
+      var that = this;
+
+      this.currentLife = this.data.life;
+
+      this.mesh = document.createElement("a-obj-model")
+      this.mesh.setAttribute("id", "goal-mesh")
+      this.setModel("public/assets/models/castle/");
+      this.el.appendChild(this.mesh)
+
+
+      this.lifeMeshIndicator = document.createElement("a-cylinder")
       // now to rescale because of parent
-      life.setAttribute("color", "green")
-      life.setAttribute("height", "10")
-      life.setAttribute("scale", "0.05 0.05 0.05")
-      life.setAttribute("position", "0 0 0")
-      el.appendChild(life)
+      this.lifeMeshIndicator.setAttribute("color", "green")
+      this.lifeMeshIndicator.setAttribute("height", this.currentLife)
+      this.lifeMeshIndicator.setAttribute("scale", "0.05 0.05 0.05")
+      this.lifeMeshIndicator.setAttribute("position", "0 0 0")
+      this.el.appendChild(this.lifeMeshIndicator);
+
+      NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
 
       // could have also used a component function
-      el.addEventListener('hit', function () {
-        var height = parseInt( life.getAttribute("height") )
-        height -= 1
-        life.setAttribute("height", height)
-        if (height < 6) {
-          path="public/assets/models/castle_lvl1/"
-          mesh.setAttribute("src", path+obj)
-          mesh.setAttribute("mtl", path+mtl)
-        }
-        if (height < 3) {
-          life.setAttribute("color", "red")
-          path="public/assets/models/castle_lvl2/"
-          mesh.setAttribute("src", path+obj)
-          mesh.setAttribute("mtl", path+mtl)
-        }
-        if (height < 1) {
-          life.setAttribute("color", "red")
-          path="public/assets/models/castle_lvl3/"
-          mesh.setAttribute("src", path+obj)
-          mesh.setAttribute("mtl", path+mtl)
-        }
+      this.el.addEventListener('hit', function(){
+        NAF.connection.broadcastDataGuaranteed("goalHitNetwork", {type : "broadcast", gameState : this.gameState});
+        that.onHit();
       });
     },
+    setModel: function(modelPath){
+      var obj = "model.obj";
+      var mtl = "materials.mtl";
+      this.mesh.setAttribute("src", modelPath + obj);
+      this.mesh.setAttribute("mtl", modelPath + mtl);
+      console.log("[WVRTD-Goal]", "Castle degrading to", modelPath);
+    },
+    onHit: function(){
+      console.log("[WVRTD-Goal]", "============I WAS HIT!!!============");
+      --this.currentLife;
+      this.lifeMeshIndicator.setAttribute("height", this.currentLife);
+
+      if (this.currentLife < 6) {
+        this.setModel("public/assets/models/castle_lvl1/");
+      }
+      else if (this.currentLife < 3) {
+        this.life.setAttribute("color", "red")
+        this.setModel("public/assets/models/castle_lvl2/");
+      }
+      else if (this.currentLife < 1) {
+        this.life.setAttribute("color", "red")
+        this.setModel("public/assets/models/castle_lvl3/");
+      }
+    },
+    onGoalHitNetwork: function(senderID, msg, data){
+      this.onHit();
+    }
   });
 
 })();

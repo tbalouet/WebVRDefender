@@ -1,16 +1,18 @@
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
-var WVRD = {};
+var WVRTD = {};
 (function(){
   "use strict";
 
   require("../lib/networked-aframe.js");
   require("./components/assign_slot.js");
+  require("./components/player.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
   require("./components/gameDynamicsParameters.js");
+  require("./components/presentation.js");
 
   /**
   * Callback called on Networked AFrame server connect
@@ -18,7 +20,7 @@ var WVRD = {};
   * @return {[type]}      [description]
   */
   window.onConnectCB = function(){
-    document.querySelector("[game-client]").components["game-client"].initClient();
+    document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 
   window.onload = function(){
@@ -32,7 +34,7 @@ var WVRD = {};
       document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
 
       document.getElementById("loaderDiv").classList.remove("make-container--visible");
-      WVRD.loaded = true;
+      WVRTD.loaded = true;
     }
     (document.querySelector("a-scene").hasLoaded ? onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", onSceneLoaded));
   };

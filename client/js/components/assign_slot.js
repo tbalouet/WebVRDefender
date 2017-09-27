@@ -2,7 +2,7 @@
 (function(){
   "use strict";
 
-  AFRAME.registerComponent("assign-slot", {
+  AFRAME.registerComponent("wvrtd-assign-slot", {
     schema: {
       slotID: { type: "string", default: "" }
     },

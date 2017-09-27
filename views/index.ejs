@@ -20,9 +20,10 @@
   <meta name="msapplication-TileColor" content="#2F3BA2">
 
   <script src="public/js/socket.io.js"></script>
-  <script src="https://aframe.io/releases/0.6.1/aframe.js"></script>
+  <script src="public/js/aframe-v0.6.1.js"></script>
   <script src="public/js/easyrtc.js"></script>
   <script src="public/js/script.js"></script>
+  <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
   <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
   <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
 
@@ -47,7 +48,8 @@
 
   <!-- A-FRAME ELEMENTS -->
 
-  <a-scene fog="color: white; near: 0; far: 105;" game-client game-dynamics-parameters>
+  <!-- <a-scene fog="color: white; near: 0; far: 105;" game-client game-dynamics-parameters> -->
+  <a-scene wvrtd-game-client wvrtd-game-dynamics-parameters>
     <a-assets>
       <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
       <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
@@ -62,17 +64,24 @@
 
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
-          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" rotation="0 180 0" scale="3 3 3"></a-entity>
+          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" position="0 -1 0" rotation="0 180 0" scale="3 3 3"></a-entity>
         </a-entity>
       </script>
-      <script id="enemy-template" type="text/html">
-        <a-entity class="enemy"><a-sphere color="gree"></a-sphere></a-entity>
+      <script id="enemy-monster-template" type="text/html">
+        <a-entity class="enemy">
+          <a-entity obj-model="obj: #monster-obj; mtl: #monster-mtl" rotation="180 0 90" scale="5 5 5"></a-entity>
+        </a-entity>
+      </script>
+      <script id="enemy-dragon-template" type="text/html">
+        <a-entity class="enemy">
+          <a-entity obj-model="obj: #dragon-obj; mtl: #dragon-mtl" rotation="0 180 90" scale="3 3 3"></a-entity>
+        </a-entity>
       </script>
     </a-assets>
     <a-entity sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); autoplay: true; loop:true;"></a-entity>
 
     <a-entity map>
-      <a-entity slot-threedof >
+      <a-entity wvrtd-slot-threedof >
         <a-entity id="slot0" position="-9.5 13.6 -12"></a-entity>
         <a-entity id="slot1" position="43.6 8.7 -41"></a-entity>
         <a-entity id="slot2" position="28 13.8 -22.7"></a-entity>
@@ -100,10 +109,7 @@
 
     <a-obj-model src="#terrain-obj" mtl="#terrain-mtl" position="0 11 0" scale="100 100 100"></a-obj-model>
 
-    <!-- should be a pool instead -->
-    <a-entity enemy-pool></a-entity>
-
-    <a-entity goal position="-17 5 80" scale="50 50 50"></a-entity>
+    <a-entity wvrtd-goal="life=10" position="-17 5 80" scale="50 50 50"></a-entity>
 
     <a-obj-model src="#drakar-obj" mtl="#drakar-mtl" position="0 1 -50" scale="10 10 10" rotation="0 -90 -10">
 	    <a-animation attribute="rotation" dur="10000" to="0 -90 10" repeat="indefinite" direction="alternate"></a-animation>

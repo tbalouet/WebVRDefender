@@ -1,8 +1,9 @@
 /* global AFRAME */
 (function(){
   "use strict";
+  var Util = require("../util.js");
 
-  AFRAME.registerComponent("a-enemy", {
+  AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
       type        : {type: "string", default: "monster"},
       scaleFactor : {type: "number", default: 5},
@@ -12,37 +13,55 @@
       soundKill   : {type: "string", default: ""}
     },
     init: function() {
-      var el = this.el;
-      el.addEventListener("hit", this.onHit);
-      el.setAttribute("networked", {
-        template          : "#enemy-template",
-        showLocalTemplate : false
+      var that = this;
+      this.el.id = "Enemy_" + this.data.type + "_" + Util.guid();
+      this.el.setAttribute("networked", {
+        template          : "#enemy-"+this.data.type+"-template",
+        showLocalTemplate : true
       });
 
-      var model = document.createElement("a-obj-model");
-      model.setAttribute("src", "#"+this.data.type+"-obj");
-      model.setAttribute("mtl", "#"+this.data.type+"-mtl");
+      this.el.setAttribute("cursor-listener", "");
 
-      model.setAttribute("rotation", this.data.rotation);
-      model.setAttribute("scale", this.data.scaleFactor + " " + this.data.scaleFactor + " " + this.data.scaleFactor);
-      el.appendChild(model);
-
-      el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
-      el.addEventListener('movingended', function () {
-        if (el.getAttribute("visible")){
-          document.querySelector("[goal]").emit("hit");
+      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.addEventListener('movingended', function () {
+        if (that.el.getAttribute("visible")){
+          document.querySelector("[wvrtd-goal]").emit("hit");
         }
       });
 
-      el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+
+      this.el.addEventListener("hit", function(){
+        that.onHit();
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+      });
     },
     onHit: function(data){
-      el.setAttribute("visible", false);
-      el.emit("kill");
+      this.el.setAttribute("visible", false);
+      this.el.emit("kill");
     }
   });
 
-  AFRAME.registerComponent('enemy-pool', {
+  AFRAME.registerComponent("wvrtd-enemy-network", {
+    init: function() {
+      debugger;
+      var that = this;
+      this.el.setAttribute("cursor-listener", "");
+
+      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+
+      this.el.addEventListener("hit", function(){
+        that.onHit();
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+      });
+    },
+    onHit: function(data){
+      this.el.setAttribute("visible", false);
+      this.el.emit("kill");
+    }
+  });
+
+  AFRAME.registerComponent('wvrtd-enemy-pool', {
     init: function() {
       this.enemyTypes = [ {
         type : "monster",
@@ -52,17 +71,18 @@
         number : 3
       }];
 
+      NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
       this.loadMonsters();
     },
     loadMonsters: function(){
       // wave 1
       for (var i=0; i < this.enemyTypes[0].number; i++){
         var enemy = document.createElement("a-entity");
-        enemy.setAttribute("a-enemy", {
+        enemy.setAttribute("wvrtd-enemy", {
           type        : this.enemyTypes[0].type,
           scaleFactor : Math.random()+5,
           rotation    : "0 180 0",
-          dur         : Math.random()*20000,
+          dur         : 15000 + Math.random()*10000,
           delay       : 10000,//5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3"
         });
@@ -72,16 +92,19 @@
       // wave 2
       for (var i=0; i< this.enemyTypes[1].number; i++){
         var enemy = document.createElement("a-entity");
-        enemy.setAttribute("a-enemy", {
+        enemy.setAttribute("wvrtd-enemy", {
           type        : this.enemyTypes[1].type,
           scaleFactor : Math.random()+3,
           rotation    : "0 0 0",
-          dur         : Math.random()*20000,
+          dur         : 15000 + Math.random()*10000,
           delay       : 5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/European_Dragon_Roaring_and_breathe_fire-daniel-simon.mp3"
         });
         this.el.appendChild(enemy);
       }
+    },
+    onEnemyHitNetwork : function(senderID, msg, data){
+      document.querySelector("#"+data).emit("hit");
     }
   });
 
