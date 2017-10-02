@@ -106,15 +106,40 @@
         document.querySelector("a-scene").appendChild(player);
 
         if(Object.values(this.gameState.clients).length === 1){
+          //If user is the first one, he's considered the game master
+          //He'll then create an enemy pool
           let enemyPool = document.createElement("a-entity");
           enemyPool.setAttribute("wvrtd-enemy-pool", "");
           document.querySelector("a-scene").appendChild(enemyPool);
         }
         else{
-          document.body.addEventListener('entityCreated', function (entity) {
-            console.log("[Game Client]", "Entity created by NAF", entity);
-          });
+          //Otherwise, he'll be looking for enemy entities to be created
+          document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
         }
+
+        NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+      },
+      /**
+       * Listener for NAF entities to be created
+       * @param  {Object} entity aframe entity received through network
+       * @return {[type]}        [description]
+       */
+      onNAFEntityCreated : function(entity){
+        if(entity.detail.el.components["networked"].data.template.indexOf("#enemy") !== -1){
+          entity.detail.el.setAttribute("wvrtd-enemy-network", "");
+        }
+      },
+      /**
+       * Listener for enemy hit via an other player
+       * @param  {[type]} senderID [description]
+       * @param  {[type]} msg      [description]
+       * @param  {[type]} data     [description]
+       * @return {[type]}          [description]
+       */
+      onEnemyHitNetwork : function(senderID, msg, data){
+        //Retrieve the enemy entity based on its ID, depending if user is game master or not
+        let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
+        enemy.onHit();
       },
       /**
       * Check list of slots against already used one

@@ -1,7 +1,6 @@
 /* global AFRAME */
 (function(){
   "use strict";
-  var Util = require("../util.js");
 
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
@@ -14,11 +13,11 @@
     },
     init: function() {
       var that = this;
-      this.el.id = "Enemy_" + this.data.type + "_" + Util.guid();
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
       });
+      this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
@@ -29,11 +28,11 @@
         }
       });
 
-      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+      // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
         that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
       });
     },
     onHit: function(data){
@@ -44,15 +43,14 @@
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
     init: function() {
-      debugger;
       var that = this;
       this.el.setAttribute("cursor-listener", "");
 
-      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+      // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
         that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
       });
     },
     onHit: function(data){
@@ -71,7 +69,6 @@
         number : 3
       }];
 
-      NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
       this.loadMonsters();
     },
     loadMonsters: function(){
@@ -82,7 +79,7 @@
           type        : this.enemyTypes[0].type,
           scaleFactor : Math.random()+5,
           rotation    : "0 180 0",
-          dur         : 15000 + Math.random()*10000,
+          dur         : 20000 + Math.random()*10000,
           delay       : 10000,//5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3"
         });
@@ -96,15 +93,12 @@
           type        : this.enemyTypes[1].type,
           scaleFactor : Math.random()+3,
           rotation    : "0 0 0",
-          dur         : 15000 + Math.random()*10000,
+          dur         : 20000 + Math.random()*10000,
           delay       : 5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/European_Dragon_Roaring_and_breathe_fire-daniel-simon.mp3"
         });
         this.el.appendChild(enemy);
       }
-    },
-    onEnemyHitNetwork : function(senderID, msg, data){
-      document.querySelector("#"+data).emit("hit");
     }
   });
 

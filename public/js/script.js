@@ -20,7 +20,6 @@
 /* global AFRAME */
 (function(){
   "use strict";
-  var Util = require("../util.js");
 
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
@@ -33,11 +32,11 @@
     },
     init: function() {
       var that = this;
-      this.el.id = "Enemy_" + this.data.type + "_" + Util.guid();
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
       });
+      this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
@@ -48,11 +47,11 @@
         }
       });
 
-      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+      // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
         that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
       });
     },
     onHit: function(data){
@@ -63,15 +62,14 @@
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
     init: function() {
-      debugger;
       var that = this;
       this.el.setAttribute("cursor-listener", "");
 
-      this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
+      // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
         that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyElt : that.el.id});
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
       });
     },
     onHit: function(data){
@@ -90,7 +88,6 @@
         number : 3
       }];
 
-      NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
       this.loadMonsters();
     },
     loadMonsters: function(){
@@ -101,7 +98,7 @@
           type        : this.enemyTypes[0].type,
           scaleFactor : Math.random()+5,
           rotation    : "0 180 0",
-          dur         : 15000 + Math.random()*10000,
+          dur         : 20000 + Math.random()*10000,
           delay       : 10000,//5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3"
         });
@@ -115,21 +112,18 @@
           type        : this.enemyTypes[1].type,
           scaleFactor : Math.random()+3,
           rotation    : "0 0 0",
-          dur         : 15000 + Math.random()*10000,
+          dur         : 20000 + Math.random()*10000,
           delay       : 5000 + Math.random()*5000,
           soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/European_Dragon_Roaring_and_breathe_fire-daniel-simon.mp3"
         });
         this.el.appendChild(enemy);
       }
-    },
-    onEnemyHitNetwork : function(senderID, msg, data){
-      document.querySelector("#"+data).emit("hit");
     }
   });
 
 })();
 
-},{"../util.js":9}],3:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /* global AFRAME, NAF */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -238,15 +232,40 @@
         document.querySelector("a-scene").appendChild(player);
 
         if(Object.values(this.gameState.clients).length === 1){
+          //If user is the first one, he's considered the game master
+          //He'll then create an enemy pool
           let enemyPool = document.createElement("a-entity");
           enemyPool.setAttribute("wvrtd-enemy-pool", "");
           document.querySelector("a-scene").appendChild(enemyPool);
         }
         else{
-          document.body.addEventListener('entityCreated', function (entity) {
-            console.log("[Game Client]", "Entity created by NAF", entity);
-          });
+          //Otherwise, he'll be looking for enemy entities to be created
+          document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
         }
+
+        NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+      },
+      /**
+       * Listener for NAF entities to be created
+       * @param  {Object} entity aframe entity received through network
+       * @return {[type]}        [description]
+       */
+      onNAFEntityCreated : function(entity){
+        if(entity.detail.el.components["networked"].data.template.indexOf("#enemy") !== -1){
+          entity.detail.el.setAttribute("wvrtd-enemy-network", "");
+        }
+      },
+      /**
+       * Listener for enemy hit via an other player
+       * @param  {[type]} senderID [description]
+       * @param  {[type]} msg      [description]
+       * @param  {[type]} data     [description]
+       * @return {[type]}          [description]
+       */
+      onEnemyHitNetwork : function(senderID, msg, data){
+        //Retrieve the enemy entity based on its ID, depending if user is game master or not
+        let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
+        enemy.onHit();
       },
       /**
       * Check list of slots against already used one
@@ -472,28 +491,7 @@ var WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./components/presentation.js":7}],9:[function(require,module,exports){
-/* global  */
-var Util = {};
-(function(){
-  "use strict";
-  /**
-  * Generate an Unique ID
-  * @return {string} Unique ID of length 4
-  */
-  Util.guid = function(){
-    function s4() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
-    }
-    return s4();
-  };
-})();
-
-module.exports = Util;
-
-},{}],10:[function(require,module,exports){
+},{"../lib/networked-aframe.js":9,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./components/presentation.js":7}],9:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
