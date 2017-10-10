@@ -1,3 +1,7 @@
+var DevDet = {};
+
+(function(){
+    "use strict";
 
 //AFrame device utils 
 var AFDevice = AFRAME.utils.device;
@@ -13,34 +17,38 @@ var device = {};
 device.type = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'DESKTOP', 'UNKNOWN']);
 
 //detected device
-var detectedDevice;
-var displayDevice;
+DevDet.detectedDevice = null;
+DevDet.displayDevice = null;
 
 //device detection
-function deviceDetection(){
+DevDet.detectDevice = function(){
     navigator.getVRDisplays().then(function (displays) {
         console.log(displays[0]);
 
         if(AFDevice.isGearVR()){
-            detectedDevice = device.type.GEARVR;
+            DevDet.detectedDevice = device.type.GEARVR;
         }
         else if(AFDevice.isMobile()){
-            detectedDevice = device.type.MOBILE;
+            DevDet.detectedDevice = device.type.MOBILE;
         }
         else if (displays.length > 0){ //trys to match high end headsets
              switch (displays[0].displayName) {
                 case 'Oculus VR HMD':
-                    detectedDevice = device.type.RIFT;
+                DevDet.detectedDevice = device.type.RIFT;
                     break;
                 case 'HTC Vive MV':
-                    detectedDevice = device.type.VIVE;
+                DevDet.detectedDevice = device.type.VIVE;
                     break;          
                 default: //undetected
                     console.log('undetected device name: ' + displays[0].displayName);
                     break;
             }
         }
-        else {detectedDevice = device.type.UNKNOWN;}
-        displayDevice = displays[0];
+        else {DevDet.detectedDevice = device.type.UNKNOWN;}
+        DevDet.displayDevice = displays[0];
     });
 };
+
+})();
+
+module.exports = DevDet;

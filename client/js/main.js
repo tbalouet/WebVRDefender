@@ -13,6 +13,8 @@ var WVRTD = {};
   require("./components/goal.js");
   require("./components/gameDynamicsParameters.js");
   require("./components/presentation.js");
+  var DevDet = require("./devDet.js");
+
 
   /**
   * Callback called on Networked AFrame server connect
@@ -25,6 +27,10 @@ var WVRTD = {};
 
   window.onload = function(){
     function onSceneLoaded(){
+      //Device Detection
+      DevDet.detectDevice();
+      WVRTD.detectedDevice = DevDet.detectedDevice;
+
       //Fetch the room name in the URL or puts you in room42
       let room = AFRAME.utils.getUrlParameter("room");
       if(!room){

@@ -449,6 +449,62 @@
 })();
 
 },{}],8:[function(require,module,exports){
+var DevDet = {};
+
+(function(){
+    "use strict";
+
+//AFrame device utils 
+var AFDevice = AFRAME.utils.device;
+
+//vr device enum setup
+function Enum(values){
+    for( var i = 0; i < values.length; ++i ){
+        this[values[i]] = i;
+    }
+    return this;
+}
+var device = {};
+device.type = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'DESKTOP', 'UNKNOWN']);
+
+//detected device
+DevDet.detectedDevice = null;
+DevDet.displayDevice = null;
+
+//device detection
+DevDet.detectDevice = function(){
+    navigator.getVRDisplays().then(function (displays) {
+        console.log(displays[0]);
+
+        if(AFDevice.isGearVR()){
+            DevDet.detectedDevice = device.type.GEARVR;
+        }
+        else if(AFDevice.isMobile()){
+            DevDet.detectedDevice = device.type.MOBILE;
+        }
+        else if (displays.length > 0){ //trys to match high end headsets
+             switch (displays[0].displayName) {
+                case 'Oculus VR HMD':
+                DevDet.detectedDevice = device.type.RIFT;
+                    break;
+                case 'HTC Vive MV':
+                DevDet.detectedDevice = device.type.VIVE;
+                    break;          
+                default: //undetected
+                    console.log('undetected device name: ' + displays[0].displayName);
+                    break;
+            }
+        }
+        else {DevDet.detectedDevice = device.type.UNKNOWN;}
+        DevDet.displayDevice = displays[0];
+    });
+};
+
+})();
+
+module.exports = DevDet;
+
+},{}],9:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -464,6 +520,8 @@ var WVRTD = {};
   require("./components/goal.js");
   require("./components/gameDynamicsParameters.js");
   require("./components/presentation.js");
+  var DevDet = require("./devDet.js");
+
 
   /**
   * Callback called on Networked AFrame server connect
@@ -476,6 +534,10 @@ var WVRTD = {};
 
   window.onload = function(){
     function onSceneLoaded(){
+      //Device Detection
+      DevDet.detectDevice();
+      WVRTD.detectedDevice = DevDet.detectedDevice;
+
       //Fetch the room name in the URL or puts you in room42
       let room = AFRAME.utils.getUrlParameter("room");
       if(!room){
@@ -491,7 +553,7 @@ var WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":9,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./components/presentation.js":7}],9:[function(require,module,exports){
+},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./components/presentation.js":7,"./devDet.js":8}],10:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -15136,4 +15198,4 @@ var WVRTD = {};
 
 /***/ })
 /******/ ]);
-},{}]},{},[8]);
+},{}]},{},[9]);
