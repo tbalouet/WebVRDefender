@@ -151,7 +151,7 @@ body {
 
 .dialog-container {
   display            : none;
-  background         : rgba(0, 0, 0, 0.57);
+  background         : rgba(0, 0, 0, 1);
   position           : fixed;
   left               : 0;
   top                : 0;
@@ -177,6 +177,7 @@ body {
   position           : absolute;
   left               : 50%;
   top                : 50%;
+  width: 60%;
   -webkit-transform  : translate(-50%, -50%) translateY(30px);
   transform          : translate(-50%, -50%) translateY(30px);
   -webkit-transition : -webkit-transform 0.333s cubic-bezier(0, 0, 0.21, 1) 0.05s;

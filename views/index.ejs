@@ -6,7 +6,10 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebVR Defender</title>
+  <!--Import Google Icon Font-->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="public/styles/inline.css">
+  <link rel="stylesheet" type="text/css" href="public/styles/materialize.min.css">
 
   <link rel="icon" type="image/ico" href="public/assets/icons/favicon.ico"/>
 
@@ -19,9 +22,8 @@
   <meta name="msapplication-TileImage" content="public/assets/icons/icon-128x128.png">
   <meta name="msapplication-TileColor" content="#2F3BA2">
 
-  <script src="client/js/devDet.js"></script>
   <script src="public/js/socket.io.js"></script>
-  <script src="public/js/aframe-v0.6.1.js"></script>
+  <script src="public/js/aframe-v0.7.0.js"></script>
   <script src="public/js/easyrtc.js"></script>
   <script src="public/js/script.js"></script>
   <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
@@ -33,7 +35,7 @@
 <body>
   <!-- MENUBAR -->
   <header class="header">
-    <h1 class="header__title">WebVR Defender</h1>
+    <h1 class="header__title">WebVR Tower Defender</h1>
     <button id="butQRCode" class="butQRCode headerButton" title="Get page QR code"></button>
   </header>
 
@@ -43,9 +45,37 @@
     <img class="loader" src="public/assets/icons/loader.gif" />
   </div>
 
-  <div id="qrCodeDiv" class="dialog-container">
-    <span id="closeQRCode" class="small close rounded heavy"></span>
-    <div id="qrcode"></div>
+
+  <div id="introContainer" class="dialog-container make-container--visible">
+    <div class="dialog">
+      <div id="welcomeCard" class="card blue-grey darken-1 hide">
+        <div class="card-content white-text">
+          <span class="card-title">Welcome</span>
+          <p>In this experience you'll be able to play a demo example of a responsive Virtual Reality game on the Web!</p>
+          <p>Please select your game mode!</p>
+        </div>
+        <div id="roomBtnDiv" class="card-action">
+          <a id="createGameBtn" class="waves-effect waves-light btn">Create Game</a>
+          <a id="joinGameBtn" class="waves-effect waves-light btn">Join Game</a>
+        </div>
+        <div id="roomInputBtn" class="row hide">
+          <div class="input-field col s6">
+            <input placeholder="Room Name" id="room_name" type="text" class="validate">
+          </div>
+          <button id="roomChoiceGo" class="btn waves-effect waves-light" type="submit" name="action">GO
+            <i class="material-icons right">send</i>
+          </button>
+        </div>
+      </div>
+      <div id="gameModeCard" class="card blue-grey darken-1 hide">
+        <div class="card-content white-text">
+          <span class="card-title">Choose your game mode</span>
+          <p>Every device has it's own gameplay. Choose how you wanna play to discover your position in the defense game!</p>
+        </div>
+        <div id="gameModeChoiceDiv" class="card-action">
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- A-FRAME ELEMENTS -->

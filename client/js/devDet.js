@@ -13,41 +13,51 @@ function Enum(values){
     }
     return this;
 }
-var device = {};
-device.type = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'DESKTOP', 'UNKNOWN']);
+DevDet.deviceType = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'UNKNOWN']);
 
 //detected device
 DevDet.detectedDevice = null;
 DevDet.displayDevice = null;
 
 //device detection
-DevDet.detectDevice = function(){
+DevDet.detectDevice = new Promise(function(resolve, reject){
+  try{
     navigator.getVRDisplays().then(function (displays) {
-        console.log(displays[0]);
+      console.log("[DevDet devices]", displays[0]);
 
-        if(AFDevice.isGearVR()){
-            DevDet.detectedDevice = device.type.GEARVR;
+      if(AFDevice.isGearVR()){
+        DevDet.detectedDevice = DevDet.deviceType.GEARVR;
+      }
+      else if(AFDevice.isMobile()){
+        DevDet.detectedDevice = DevDet.deviceType.MOBILE;
+      }
+      else if (displays.length > 0){ //trys to match high end headsets
+        switch (displays[0].displayName) {
+          case 'Oculus VR HMD':
+            DevDet.detectedDevice = DevDet.deviceType.RIFT;
+            break;
+          case 'HTC Vive MV':
+            DevDet.detectedDevice = DevDet.deviceType.VIVE;
+            break;          
+          default: //undetected
+            console.log('undetected device name: ' + displays[0].displayName);
+            break;
         }
-        else if(AFDevice.isMobile()){
-            DevDet.detectedDevice = device.type.MOBILE;
-        }
-        else if (displays.length > 0){ //trys to match high end headsets
-             switch (displays[0].displayName) {
-                case 'Oculus VR HMD':
-                DevDet.detectedDevice = device.type.RIFT;
-                    break;
-                case 'HTC Vive MV':
-                DevDet.detectedDevice = device.type.VIVE;
-                    break;          
-                default: //undetected
-                    console.log('undetected device name: ' + displays[0].displayName);
-                    break;
-            }
-        }
-        else {DevDet.detectedDevice = device.type.UNKNOWN;}
-        DevDet.displayDevice = displays[0];
+      }
+      else if(displays.length === 0){
+        DevDet.detectedDevice = DevDet.deviceType.DESKTOP;
+      }
+      else {
+        DevDet.detectedDevice = DevDet.deviceType.UNKNOWN;
+      }
+      DevDet.displayDevice = displays[0];
+      resolve(DevDet);
     });
-};
+  }
+  catch(err){
+    reject(err);
+  }
+});
 
 })();
 
