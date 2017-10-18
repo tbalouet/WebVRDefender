@@ -8,9 +8,41 @@
       slotID: { type: "string", default: "" }
     },
     init: function() {
+      this.data.slotID = this.getUnusedSlot();
       var newpos = document.getElementById(this.data.slotID).getAttribute("position");
       this.el.setAttribute("position", newpos);
       console.log("Slot assigned:", this.data.slotID);
+    },
+    /**
+    * Check list of slots against already used one
+    * @return {int} returns first free slot
+    */
+    getUnusedSlot : function(){
+      let gameClient = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"];
+      let slots = document.querySelector("[wvrtd-slot-threedof]").children;
+      let slotID = undefined;
+      for(let i = 0;i < slots.length; ++i){
+        let isTaken = false;
+        for(let clientID in gameClient.gameState.clients){
+          if(gameClient.gameState.clients.hasOwnProperty(clientID)){
+            let aClient = gameClient.gameState.clients[clientID];
+            if(aClient.slotID === slots[i].id){
+              isTaken = true;
+              break;
+            }
+          }
+        }
+        if(!isTaken){
+          slotID = slots[i].id;
+          break;
+        }
+      }
+
+      if(slotID){
+        gameClient.clientState.slotID = slotID;
+        gameClient.sendGameStateToServer();
+      }
+      return slotID;
     }
   });
 
@@ -53,6 +85,11 @@
         that.onHit();
         NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
       });
+
+      this.el.components["alongpath"].pauseComponent();
+    },
+    start: function(){
+      this.el.components["alongpath"].playComponent();
     },
     onHit: function(data){
       this.el.setAttribute("visible", false);
@@ -82,9 +119,23 @@
     init: function() {
       this.enemyTypes = [ {
         type : "monster",
+        scaleAdd : 5,
+        rotation : "0 180 0",
+        durAdd: 20000,
+        durMult: 10000,
+        delayAdd: 5000,
+        delayMult: 5000,
+        soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 2
       },{
         type : "dragon",
+        scaleAdd : 3,
+        rotation : "0 0 0",
+        durAdd: 20000,
+        durMult: 10000,
+        delayAdd: 5000,
+        delayMult: 5000,
+        soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 3
       }];
 
@@ -92,31 +143,25 @@
     },
     loadMonsters: function(){
       // wave 1
-      for (var i=0; i < this.enemyTypes[0].number; i++){
-        var enemy = document.createElement("a-entity");
-        enemy.setAttribute("wvrtd-enemy", {
-          type        : this.enemyTypes[0].type,
-          scaleFactor : Math.random()+5,
-          rotation    : "0 180 0",
-          dur         : 20000 + Math.random()*10000,
-          delay       : 10000,//5000 + Math.random()*5000,
-          soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3"
-        });
-        this.el.appendChild(enemy);
+      for (var i=0; i < this.enemyTypes.length; i++){
+        for (var j=0; j< this.enemyTypes[i].number; j++){
+          var enemy = document.createElement("a-entity");
+          enemy.setAttribute("wvrtd-enemy", {
+            type        : this.enemyTypes[i].type,
+            scaleFactor : Math.random() + this.enemyTypes[i].scaleAdd,
+            rotation    : this.enemyTypes[i].rotation,
+            dur         : this.enemyTypes[i].durAdd + Math.random() * this.enemyTypes[i].durMult,
+            delay       : this.enemyTypes[i].delayAdd + Math.random() * this.enemyTypes[i].delayMult,
+            soundKill   : this.enemyTypes[i].soundKill
+          });
+          this.el.appendChild(enemy);
+        }
       }
-
-      // wave 2
-      for (var i=0; i< this.enemyTypes[1].number; i++){
-        var enemy = document.createElement("a-entity");
-        enemy.setAttribute("wvrtd-enemy", {
-          type        : this.enemyTypes[1].type,
-          scaleFactor : Math.random()+3,
-          rotation    : "0 0 0",
-          dur         : 20000 + Math.random()*10000,
-          delay       : 5000 + Math.random()*5000,
-          soundKill   : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/European_Dragon_Roaring_and_breathe_fire-daniel-simon.mp3"
-        });
-        this.el.appendChild(enemy);
+    },
+    start: function(){
+      var enemys = this.el.querySelectorAll("[wvrtd-enemy]");
+      for(let i = 0; i < enemys.length; ++i){
+        enemys[i].components["wvrtd-enemy"].start();
       }
     }
   });
@@ -138,24 +183,37 @@
     init: function() {
       //General game state with informations about all clients
       this.gameState = undefined;
-
+      this.serverConnected = false;
+    },
+    setDevice: function(deviceType){      
       //TODO: Elaborate clientstate based on device
       this.clientState = {
         ID     : 0,
-        type   : "threedof",
+        type   : deviceType,
         slotID : undefined
       };
+      if(this.serverConnected){
+        this.initClient();
+      }
     },
     /**
     * Init the client, called when connected to the server
     * @return {[type]} [description]
     */
     initClient : function(){
-      window.onbeforeunload = this.onDisconnect.bind(this);
+      if(this.clientState){
+        window.onbeforeunload = this.onDisconnect.bind(this);
 
-      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
+        NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
 
-      this.clientState.ID = NAF.clientId;
+        this.clientState.ID = NAF.clientId;
+        this.sendConnect();
+
+        document.body.addEventListener('clientDisconnected', this.onClientDisconnected.bind(this));
+      }
+      this.serverConnected = true;
+    },
+    sendConnect: function(){
       this.sendEvent("clientConnect", this.initialSetup.bind(this));
     },
     /**
@@ -172,6 +230,7 @@
         function(msgType, msgData){
           that.gameState = msgData.gameState;
           console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
+          WVRTD.gameLaunchUI.createPlayerList(that.gameState); 
 
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
@@ -211,6 +270,10 @@
       onGameStateUpdate : function(senderID, msg, data){
         this.gameState = data.gameState;
         console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
+        WVRTD.gameLaunchUI.createPlayerList(this.gameState);  
+      },
+      onClientDisconnected: function(evt){
+        this.sendEvent("getGameState");
       },
       /**
       * Init player entity by checking its type
@@ -221,11 +284,10 @@
         player.id = "player"+Math.floor(Math.random()*50);
 
         switch(this.clientState.type){
-          case "threedof":
-          let slotID = this.getUnusedSlot();
-          if(slotID){
-            player.setAttribute("wvrtd-player", { slotID : this.clientState.slotID, type : this.clientState.type});
-          }
+          case WVRTD.devDet.deviceType.GEARVR:
+          case WVRTD.devDet.deviceType.MOBILE:
+          case WVRTD.devDet.deviceType.DESKTOP://For now
+            player.setAttribute("wvrtd-player", { type : this.clientState.type});
           break;
         }
 
@@ -241,6 +303,8 @@
         else{
           //Otherwise, he'll be looking for enemy entities to be created
           document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
+          WVRTD.gameLaunchUI.removeLaunchGame();
+          NAF.connection.subscribeToDataChannel("gameLaunched", this.onGameLaunched.bind(this));
         }
 
         NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
@@ -267,35 +331,19 @@
         let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
         enemy.onHit();
       },
-      /**
-      * Check list of slots against already used one
-      * @return {int} returns first free slot
-      */
-      getUnusedSlot : function(){
-        let slots = document.querySelector("[wvrtd-slot-threedof]").children;
-        let slotID = undefined;
-        for(let i = 0;i < slots.length; ++i){
-          let isTaken = false;
-          for(let clientID in this.gameState.clients){
-            if(this.gameState.clients.hasOwnProperty(clientID)){
-              let aClient = this.gameState.clients[clientID];
-              if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-                isTaken = true;
-                break;
-              }
-            }
-          }
-          if(!isTaken){
-            slotID = slots[i].id;
-            break;
-          }
-        }
+      launchGame: function(){
+        NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
+        WVRTD.gameLaunchUI.hideIntroUI();
+        document.querySelector("#windSound").components["sound"].playSound();
 
-        if(slotID){
-          this.clientState.slotID = slotID;
-          this.sendGameStateToServer();
-        }
-        return slotID;
+        setTimeout(function(){
+          document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+          document.querySelector("#windSound").components["sound"].play();
+        }, 10000);
+      },
+      onGameLaunched : function(senderID, msg, data){
+        WVRTD.gameLaunchUI.hideIntroUI();
+        document.querySelector("#windSound").components["sound"].playSound();
       }
     });
 
@@ -397,7 +445,7 @@
         showLocalTemplate : true
       });
 
-      this.el.setAttribute("wvrtd-assign-slot", { slotID : this.data.slotID});
+      this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});
       this.el.setAttribute("look-controls", {});
       this.el.setAttribute("wvrtd-presentation-display", {});
@@ -429,26 +477,6 @@
 })();
 
 },{}],7:[function(require,module,exports){
-/* global AFRAME */
-(function(){
-  "use strict";
-
-  AFRAME.registerComponent("wvrtd-presentation-display", {
-    init: function() {
-      var el = this.el;
-      var text = document.createElement("a-text");
-      var content = "The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!";
-      text.setAttribute("color", "brown");
-      text.setAttribute("value", content);
-      text.setAttribute("position", "-1 0.5 -3");
-      el.appendChild(text);
-      window.setTimeout( function() { text.setAttribute("visible", "false"); }, 5000 );
-    }
-  });
-
-})();
-
-},{}],8:[function(require,module,exports){
 var DevDet = {};
 
 (function(){
@@ -514,11 +542,138 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
 
 module.exports = DevDet;
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+var GameLaunchUI;
+
+(function(){
+  "use strict";
+
+  var DevDet = require("./devDet.js");
+
+  GameLaunchUI = function(){
+    //Fetch the room name in the URL or puts you in room42
+    this.room = AFRAME.utils.getUrlParameter("room");
+    if(!this.room){
+      this.initGameChoice();
+    }
+    else{
+      document.querySelector("#welcomeCard").classList.add("hide");
+      document.querySelector("#gameModeCard").classList.remove("hide");
+      (document.querySelector("a-scene").hasLoaded ? this.onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", this.onSceneLoaded.bind(this)));
+    }
+  };
+
+  GameLaunchUI.prototype.initGameChoice = function(){
+    document.body.removeChild(document.querySelector("a-scene"));
+    document.querySelector("#welcomeCard").classList.remove("hide");
+
+    function onGameChoiceClick(type){
+      document.querySelector("#roomBtnDiv").classList.add("hide");
+      document.querySelector("#roomInputBtn").classList.remove("hide");
+
+      document.querySelector("#roomChoiceGo").addEventListener("click", function(){
+        location.href = location.origin + location.pathname + "?room=" + document.querySelector("#room_name").value;
+      });
+    }
+    document.querySelector("#createGameBtn").addEventListener("click", onGameChoiceClick);
+    document.querySelector("#joinGameBtn").addEventListener("click", onGameChoiceClick);
+  };
+
+  GameLaunchUI.prototype.onSceneLoaded = function(){
+    var that = this;
+
+    //Device Detection
+    DevDet.detectDevice.then(function(data){
+      WVRTD.devDet = data;
+      that.displayDeviceUI();
+
+      document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: that.room, debug: true, onConnect: "onConnectCB"});
+
+      document.getElementById("loaderDiv").classList.remove("make-container--visible");
+      WVRTD.loaded = true;
+    });
+  };
+
+  GameLaunchUI.prototype.displayDeviceUI = function(){
+    var that = this;
+    var gameModeChoiceDiv = document.querySelector("#gameModeChoiceDiv");
+    function createBtn(id, name, aDeviceType){
+      var btn = document.createElement("a");
+      btn.id = id;
+      btn.classList.add("waves-effect");
+      btn.classList.add("waves-light");
+      btn.classList.add("btn");
+      btn.innerHTML = name;
+      gameModeChoiceDiv.appendChild(btn);
+
+      var deviceType = aDeviceType;
+      btn.addEventListener("click", function(){
+        that.onGameChoiceMade(deviceType);
+      });
+    }
+
+    switch(WVRTD.devDet.detectedDevice){
+      case WVRTD.devDet.deviceType.GEARVR:
+      case WVRTD.devDet.deviceType.MOBILE:
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
+        createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
+        break;
+      case WVRTD.devDet.deviceType.VIVE:
+      case WVRTD.devDet.deviceType.RIFT:
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
+      case WVRTD.devDet.deviceType.DESKTOP:
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
+    }
+  };
+
+  GameLaunchUI.prototype.onGameChoiceMade = function(deviceType){
+    document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].setDevice(deviceType);
+    document.querySelector("#gameModeCard").classList.add("hide");
+    document.querySelector("#playersListCard").classList.remove("hide");
+    document.querySelector("#roomJoinIncentive").innerHTML += location.href;
+
+    if(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState){
+      this.createPlayerList(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState);
+    }
+
+    document.querySelector("#launchGame").addEventListener("click", function(){
+      document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].launchGame();
+    })
+  };
+
+  GameLaunchUI.prototype.createPlayerList = function(gameState){
+    var nbPlayers = 0;
+    for(var key in gameState.clients){
+      if(gameState.clients.hasOwnProperty(key)){
+        nbPlayers++;
+      }
+    }
+    document.querySelector("#nbPlayersSpan").innerHTML = nbPlayers;
+  };
+
+  GameLaunchUI.prototype.removeLaunchGame = function(){
+    document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
+    var spanWait = document.createElement("span");
+    spanWait.id = "spanWait";
+    spanWait.classList.add("card-title");
+    spanWait.innerHTML = "Waiting for game master to launch game...";
+    document.querySelector("#playersListCard").appendChild(spanWait);
+  };
+
+  GameLaunchUI.prototype.hideIntroUI = function(){
+    document.querySelector("#introContainer").classList.add("hide");
+  };
+})();
+
+module.exports = GameLaunchUI;
+},{"./devDet.js":7}],9:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
-var WVRTD = {};
+window.WVRTD = {};
 (function(){
   "use strict";
 
@@ -529,8 +684,7 @@ var WVRTD = {};
   require("./components/gameClient.js");
   require("./components/goal.js");
   require("./components/gameDynamicsParameters.js");
-  require("./components/presentation.js");
-  var DevDet = require("./devDet.js");
+  var GameLaunchUI = require("./gameLaunchUI.js");
 
 
   /**
@@ -546,62 +700,11 @@ var WVRTD = {};
   };
 
   window.onload = function(){
-    //Fetch the room name in the URL or puts you in room42
-    let room = AFRAME.utils.getUrlParameter("room");
-    if(!room){
-      document.body.removeChild(document.querySelector("a-scene"));
-      document.querySelector("#welcomeCard").classList.remove("hide");
-    }
-    else{
-      document.querySelector("#welcomeCard").classList.add("hide");
-      document.querySelector("#gameModeCard").classList.remove("hide");
-    }
-
-    if(document.querySelector("a-scene")){
-      function onSceneLoaded(){
-        //Device Detection
-        DevDet.detectDevice.then(function(data){
-          WVRTD.devDet = data;
-
-          var gameModeChoiceDiv = document.querySelector("#gameModeChoiceDiv");
-          function createBtn(id, name){
-            var btn = document.createElement("a");
-            btn.id = id;
-            btn.classList.add("waves-effect");
-            btn.classList.add("waves-light");
-            btn.classList.add("btn");
-            btn.innerHTML = name;
-            gameModeChoiceDiv.appendChild(btn);
-          }
-
-          switch(WVRTD.devDet.detectedDevice){
-            case WVRTD.devDet.deviceType.GEARVR:
-            case WVRTD.devDet.deviceType.MOBILE:
-              createBtn("gameChoiceVR", "VR MODE");
-              createBtn("gameChoiceMW", "MAGIC WINDOW MODE");
-              break;
-            case WVRTD.devDet.deviceType.VIVE:
-            case WVRTD.devDet.deviceType.RIFT:
-              createBtn("gameChoiceVR", "VR MODE");
-              createBtn("gameChoiceMW", "DESKTOP MODE");
-              break;
-            case WVRTD.devDet.deviceType.DESKTOP:
-              createBtn("gameChoiceMW", "DESKTOP MODE");
-              break;
-          }
-
-          document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: room, debug: true, onConnect: "onConnectCB"});
-
-          document.getElementById("loaderDiv").classList.remove("make-container--visible");
-          WVRTD.loaded = true;
-        })
-      }
-      (document.querySelector("a-scene").hasLoaded ? onSceneLoaded() : document.querySelector("a-scene").addEventListener("loaded", onSceneLoaded));
-    }
+    WVRTD.gameLaunchUI = new GameLaunchUI();
   };
 })();
 
-},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./components/presentation.js":7,"./devDet.js":8}],10:[function(require,module,exports){
+},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./gameLaunchUI.js":8}],10:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

@@ -28,14 +28,14 @@
   <script src="public/js/script.js"></script>
   <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
   <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
-  <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
+  <script src="public/js/aframe-alongpath-component.js"></script>
   
 
 </head>
 <body>
   <!-- MENUBAR -->
   <header class="header">
-    <h1 class="header__title">WebVR Tower Defender</h1>
+    <h1 class="header__title" style="cursor:pointer;" onclick="location.href = location.origin + location.pathname;">WebVR Tower Defender</h1>
     <button id="butQRCode" class="butQRCode headerButton" title="Get page QR code"></button>
   </header>
 
@@ -51,6 +51,7 @@
       <div id="welcomeCard" class="card blue-grey darken-1 hide">
         <div class="card-content white-text">
           <span class="card-title">Welcome</span>
+          <p>The terrible vikings are attacking our village, we need to defend. Look at them and laser them to Valhala!</p>
           <p>In this experience you'll be able to play a demo example of a responsive Virtual Reality game on the Web!</p>
           <p>Please select your game mode!</p>
         </div>
@@ -69,11 +70,23 @@
       </div>
       <div id="gameModeCard" class="card blue-grey darken-1 hide">
         <div class="card-content white-text">
-          <span class="card-title">Choose your game mode</span>
-          <p>Every device has it's own gameplay. Choose how you wanna play to discover your position in the defense game!</p>
+          <span class="card-title">Select your playing mode</span>
+          <p>Every device has its own gameplay. Choose how you wanna play to discover your position in the defense game!</p>
         </div>
         <div id="gameModeChoiceDiv" class="card-action">
         </div>
+      </div>
+      <div id="playersListCard" class="card blue-grey darken-1 hide">
+        <div class="card-content white-text">
+          <span class="card-title">Waiting for other players to join</span>
+          <p id="roomJoinIncentive">Invite friends to join by sharing the following URL: </p>
+        </div>
+        <div id="playersListDiv" class="card-action">
+          <span class="card-title">Number of players: <span id="nbPlayersSpan"></span></span>
+        </div>
+        <button id="launchGame" class="btn waves-effect waves-light" type="submit" name="action">LAUNCH GAME
+          <i class="material-icons right">send</i>
+        </button>
       </div>
     </div>
   </div>
@@ -110,7 +123,7 @@
         </a-entity>
       </script>
     </a-assets>
-    <a-entity sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); autoplay: true; loop:true;"></a-entity>
+    <a-entity id="windSound" sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); loop:true;"></a-entity>
 
     <a-entity map>
       <a-entity wvrtd-slot-threedof >

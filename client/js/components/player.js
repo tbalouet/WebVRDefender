@@ -14,7 +14,7 @@
         showLocalTemplate : true
       });
 
-      this.el.setAttribute("wvrtd-assign-slot", { slotID : this.data.slotID});
+      this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});
       this.el.setAttribute("look-controls", {});
       this.el.setAttribute("wvrtd-presentation-display", {});

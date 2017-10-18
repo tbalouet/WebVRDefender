@@ -42,9 +42,13 @@ GameServer.prototype.registerEvents = function(){
             socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
             next(null);
             break;
+          case "getGameState":
+            socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
+            next(null);
+            break;
           case "clientDisconnect":
             delete this.gameState.clients[msg.msgData.clientState.ID];
-            socketCallback({msgType : "gameState", msgData : {gameState : this.gameState}}); //nice
+            this.rtcServer.events.emitDefault("gameState", connectionObj, msg, socketCallback, next);  
             next(null);
             break;
           default:

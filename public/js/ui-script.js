@@ -27,23 +27,6 @@
     event.stopPropagation();
   });
 
-  var gameChoice = undefined;
-  function onGameChoiceClick(type){
-    gameChoice = type;
-    document.querySelector("#roomBtnDiv").classList.add("hide");
-    document.querySelector("#roomInputBtn").classList.remove("hide");
-
-    document.querySelector("#roomChoiceGo").addEventListener("click", function(){
-      location.href = location.origin + location.pathname + "?room=" + document.querySelector("#room_name").value;
-    });
-  }
-  document.querySelector("#createGameBtn").addEventListener("click", function(){
-    onGameChoiceClick("CREATE");
-  });
-  document.querySelector("#joinGameBtn").addEventListener("click", function(){
-    onGameChoiceClick("JOIN");
-  });
-
 
   /**
    * Toggles the visibility of the appropriate dialog screen. 

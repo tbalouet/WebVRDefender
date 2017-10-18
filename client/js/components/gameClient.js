@@ -12,24 +12,37 @@
     init: function() {
       //General game state with informations about all clients
       this.gameState = undefined;
-
+      this.serverConnected = false;
+    },
+    setDevice: function(deviceType){      
       //TODO: Elaborate clientstate based on device
       this.clientState = {
         ID     : 0,
-        type   : "threedof",
+        type   : deviceType,
         slotID : undefined
       };
+      if(this.serverConnected){
+        this.initClient();
+      }
     },
     /**
     * Init the client, called when connected to the server
     * @return {[type]} [description]
     */
     initClient : function(){
-      window.onbeforeunload = this.onDisconnect.bind(this);
+      if(this.clientState){
+        window.onbeforeunload = this.onDisconnect.bind(this);
 
-      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
+        NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
 
-      this.clientState.ID = NAF.clientId;
+        this.clientState.ID = NAF.clientId;
+        this.sendConnect();
+
+        document.body.addEventListener('clientDisconnected', this.onClientDisconnected.bind(this));
+      }
+      this.serverConnected = true;
+    },
+    sendConnect: function(){
       this.sendEvent("clientConnect", this.initialSetup.bind(this));
     },
     /**
@@ -46,6 +59,7 @@
         function(msgType, msgData){
           that.gameState = msgData.gameState;
           console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
+          WVRTD.gameLaunchUI.createPlayerList(that.gameState); 
 
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
@@ -85,6 +99,10 @@
       onGameStateUpdate : function(senderID, msg, data){
         this.gameState = data.gameState;
         console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
+        WVRTD.gameLaunchUI.createPlayerList(this.gameState);  
+      },
+      onClientDisconnected: function(evt){
+        this.sendEvent("getGameState");
       },
       /**
       * Init player entity by checking its type
@@ -95,11 +113,10 @@
         player.id = "player"+Math.floor(Math.random()*50);
 
         switch(this.clientState.type){
-          case "threedof":
-          let slotID = this.getUnusedSlot();
-          if(slotID){
-            player.setAttribute("wvrtd-player", { slotID : this.clientState.slotID, type : this.clientState.type});
-          }
+          case WVRTD.devDet.deviceType.GEARVR:
+          case WVRTD.devDet.deviceType.MOBILE:
+          case WVRTD.devDet.deviceType.DESKTOP://For now
+            player.setAttribute("wvrtd-player", { type : this.clientState.type});
           break;
         }
 
@@ -115,6 +132,8 @@
         else{
           //Otherwise, he'll be looking for enemy entities to be created
           document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
+          WVRTD.gameLaunchUI.removeLaunchGame();
+          NAF.connection.subscribeToDataChannel("gameLaunched", this.onGameLaunched.bind(this));
         }
 
         NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
@@ -141,35 +160,19 @@
         let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
         enemy.onHit();
       },
-      /**
-      * Check list of slots against already used one
-      * @return {int} returns first free slot
-      */
-      getUnusedSlot : function(){
-        let slots = document.querySelector("[wvrtd-slot-threedof]").children;
-        let slotID = undefined;
-        for(let i = 0;i < slots.length; ++i){
-          let isTaken = false;
-          for(let clientID in this.gameState.clients){
-            if(this.gameState.clients.hasOwnProperty(clientID)){
-              let aClient = this.gameState.clients[clientID];
-              if(aClient.type === "threedof" && aClient.slotID === slots[i].id){
-                isTaken = true;
-                break;
-              }
-            }
-          }
-          if(!isTaken){
-            slotID = slots[i].id;
-            break;
-          }
-        }
+      launchGame: function(){
+        NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
+        WVRTD.gameLaunchUI.hideIntroUI();
+        document.querySelector("#windSound").components["sound"].playSound();
 
-        if(slotID){
-          this.clientState.slotID = slotID;
-          this.sendGameStateToServer();
-        }
-        return slotID;
+        setTimeout(function(){
+          document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+          document.querySelector("#windSound").components["sound"].play();
+        }, 10000);
+      },
+      onGameLaunched : function(senderID, msg, data){
+        WVRTD.gameLaunchUI.hideIntroUI();
+        document.querySelector("#windSound").components["sound"].playSound();
       }
     });
 
