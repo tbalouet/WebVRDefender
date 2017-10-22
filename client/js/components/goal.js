@@ -3,13 +3,18 @@
   "use strict";
 
   AFRAME.registerComponent('wvrtd-goal', {
+    dependencies: ["wvrtd-game-dynamics-parameters"],
     schema: {
       life: { type: "number", default: 10 }
+	// overwritten by the game dynamics parameters component
     },
     init: function() {
+      //var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
+      // despite the dependencies the scene at the time has no available components
       var that = this;
 
       this.currentLife = this.data.life;
+      //this.currentLife = parameters.goalHealth;
 
       this.mesh = document.createElement("a-obj-model")
       this.mesh.setAttribute("id", "goal-mesh")

@@ -74,9 +74,10 @@
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {
+    dependencies: ["wvrtd-game-dynamics-parameters"],
     init: function() {
-      this.enemyTypes = [ {
-        type : "monster",
+      this.enemyTypes = {
+        "monster": {
         scaleAdd : 5,
         rotation : "0 180 0",
         durAdd: 20000,
@@ -86,8 +87,8 @@
         health: 100,
         soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 2
-      },{
-        type : "dragon",
+      },
+        "dragon" : {
         scaleAdd : 3,
         rotation : "0 0 0",
         durAdd: 20000,
@@ -97,23 +98,29 @@
         health: 200,
         soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 3
-      }];
+      }};
+	// NB: number and health is now overwritten by the game dynamics component
 
       this.loadMonsters();
     },
     loadMonsters: function(){
-      // wave 1
-      for (var i=0; i < this.enemyTypes.length; i++){
-        for (var j=0; j< this.enemyTypes[i].number; j++){
+      var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
+	console.log(parameters.waves)
+      for (var i=0; i < parameters.waves.length; i++){
+	  var type = parameters.waves[i];
+	  var health = parameters.wavesHealth[i];
+	  var enemyType = this.enemyTypes[type]
+	console.log('generating wave of', type, 'with properties', enemyType)
+        for (var j=0; j< parameters.wavesSize[i]; j++){
           var enemy = document.createElement("a-entity");
           enemy.setAttribute("wvrtd-enemy", {
-            type        : this.enemyTypes[i].type,
-            scaleFactor : Math.random() + this.enemyTypes[i].scaleAdd,
-            rotation    : this.enemyTypes[i].rotation,
-            dur         : this.enemyTypes[i].durAdd + Math.random() * this.enemyTypes[i].durMult,
-            delay       : this.enemyTypes[i].delayAdd + Math.random() * this.enemyTypes[i].delayMult,
-            health      : this.enemyTypes[i].health,
-            soundKill   : this.enemyTypes[i].soundKill
+            type        : type,
+            scaleFactor : Math.random() + enemyType.scaleAdd,
+            rotation    : enemyType.rotation,
+            dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
+            delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,
+            health      : health,
+            soundKill   : enemyType.soundKill
           });
           this.el.appendChild(enemy);
         }
