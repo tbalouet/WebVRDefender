@@ -27,7 +27,12 @@ var GameLaunchUI;
       document.querySelector("#roomInputBtn").classList.remove("hide");
 
       document.querySelector("#roomChoiceGo").addEventListener("click", function(){
-        location.href = location.origin + location.pathname + "?room=" + document.querySelector("#room_name").value;
+	var roomName = document.querySelector("#room_name").value;
+	if (roomName.length == 0){
+	// if the user tries to enter a room without a name, generate one
+		roomName = "RandomRoom"+parseInt( Math.random()*10000 )
+	}
+        location.href = location.origin + location.pathname + "?room=" + roomName
       });
     }
     document.querySelector("#createGameBtn").addEventListener("click", onGameChoiceClick);
