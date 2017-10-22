@@ -9,6 +9,7 @@
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 20000},
       delay       : {type: "number", default: 10000},
+      health      : {type: "number", default: 100},
       soundKill   : {type: "string", default: ""}
     },
     init: function() {
@@ -41,8 +42,15 @@
       this.el.components["alongpath"].playComponent();
     },
     onHit: function(data){
+      this.data.health -= 50;
+      console.log(this.data.type, 'hit', this.data.health, 'HP left')
+      if (this.data.health <= 0){
+        this.onKill();
+      }
+    },
+    onKill: function(data){
+      console.log(this.data.type, 'killed')
       this.el.setAttribute("visible", false);
-	// todo check health
       this.el.emit("kill");
     }
   });
@@ -75,6 +83,7 @@
         durMult: 10000,
         delayAdd: 5000,
         delayMult: 5000,
+        health: 100,
         soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 2
       },{
@@ -85,6 +94,7 @@
         durMult: 10000,
         delayAdd: 5000,
         delayMult: 5000,
+        health: 200,
         soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
         number : 3
       }];
@@ -102,6 +112,7 @@
             rotation    : this.enemyTypes[i].rotation,
             dur         : this.enemyTypes[i].durAdd + Math.random() * this.enemyTypes[i].durMult,
             delay       : this.enemyTypes[i].delayAdd + Math.random() * this.enemyTypes[i].delayMult,
+            health      : this.enemyTypes[i].health,
             soundKill   : this.enemyTypes[i].soundKill
           });
           this.el.appendChild(enemy);
