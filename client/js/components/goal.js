@@ -28,7 +28,7 @@
       NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
 
       // could have also used a component function
-      this.el.addEventListener('hit', function(){
+      this.el.addEventListener('enemy-entered', function(){
         NAF.connection.broadcastDataGuaranteed("goalHitNetwork", {type : "broadcast", gameState : this.gameState});
         that.onHit();
       });

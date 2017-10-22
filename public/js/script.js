@@ -75,7 +75,7 @@
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
         if (that.el.getAttribute("visible")){
-          document.querySelector("[wvrtd-goal]").emit("hit");
+          document.querySelector("[wvrtd-goal]").emit("enemy-entered");
         }
       });
 
@@ -93,6 +93,7 @@
     },
     onHit: function(data){
       this.el.setAttribute("visible", false);
+	// todo check health
       this.el.emit("kill");
     }
   });
@@ -392,7 +393,7 @@
       NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
 
       // could have also used a component function
-      this.el.addEventListener('hit', function(){
+      this.el.addEventListener('enemy-entered', function(){
         NAF.connection.broadcastDataGuaranteed("goalHitNetwork", {type : "broadcast", gameState : this.gameState});
         that.onHit();
       });

@@ -24,7 +24,7 @@
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
         if (that.el.getAttribute("visible")){
-          document.querySelector("[wvrtd-goal]").emit("hit");
+          document.querySelector("[wvrtd-goal]").emit("enemy-entered");
         }
       });
 
@@ -42,6 +42,7 @@
     },
     onHit: function(data){
       this.el.setAttribute("visible", false);
+	// todo check health
       this.el.emit("kill");
     }
   });
