@@ -36,6 +36,9 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
           case 'Oculus VR HMD':
             DevDet.detectedDevice = DevDet.deviceType.RIFT;
             break;
+          case 'OpenVR HMD':
+            DevDet.detectedDevice = DevDet.deviceType.VIVE;
+            break;          
           case 'HTC Vive MV':
             DevDet.detectedDevice = DevDet.deviceType.VIVE;
             break;          
