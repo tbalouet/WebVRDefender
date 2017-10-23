@@ -23,9 +23,9 @@
 
       var cursor = document.createElement("a-ring");
       cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 500");
-      cursor.setAttribute("position", "0 0 -20");
-      cursor.setAttribute("radius-inner", 0.5);
-      cursor.setAttribute("radius-outer", 0.8);
+      cursor.setAttribute("position", "0 0 -3");
+      cursor.setAttribute("radius-inner", 0.1);
+      cursor.setAttribute("radius-outer", 0.15);
       cursor.setAttribute("animation", {property: "scale", dir: "normal", dur: 200, easing: "easeInSine", to: "0.1 0.1 0.1", startEvents: "click"});
       cursor.setAttribute("color", "black");
       this.el.appendChild(cursor);

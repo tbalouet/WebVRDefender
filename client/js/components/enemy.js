@@ -5,7 +5,7 @@
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
       type        : {type: "string", default: "monster"},
-      scaleFactor : {type: "number", default: 5},
+      startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 20000},
       delay       : {type: "number", default: 10000},
@@ -21,6 +21,8 @@
       this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
+
+      this.el.setAttribute("position", this.data.startPos);
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
@@ -78,7 +80,7 @@
     init: function() {
       this.enemyTypes = {
         "monster": {
-          scaleAdd : 5,
+          startPos: "-1.525 0.24 30.255",
           rotation : "0 180 0",
           durAdd: 20000,
           durMult: 10000,
@@ -89,7 +91,7 @@
           number : 2
         },
         "dragon" : {
-          scaleAdd : 3,
+          startPos: "-9.96 2.834 27.57",
           rotation : "0 0 0",
           durAdd: 20000,
           durMult: 10000,
@@ -115,7 +117,7 @@
             var enemy = document.createElement("a-entity");
             enemy.setAttribute("wvrtd-enemy", {
               type        : type,
-              scaleFactor : Math.random() + enemyType.scaleAdd,
+              startPos    : enemyType.startPos,
               rotation    : enemyType.rotation,
               dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
               delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,

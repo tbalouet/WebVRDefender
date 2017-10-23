@@ -8,8 +8,8 @@
     },
     init: function() {
       this.data.slotID = this.getUnusedSlot();
-      var newpos = document.getElementById(this.data.slotID).getAttribute("position");
-      this.el.setAttribute("position", newpos);
+      this.el.setAttribute("position", document.getElementById(this.data.slotID).getAttribute("position"));
+      this.el.setAttribute("rotation", document.getElementById(this.data.slotID).getAttribute("rotation"));
       console.log("Slot assigned:", this.data.slotID);
     },
     /**

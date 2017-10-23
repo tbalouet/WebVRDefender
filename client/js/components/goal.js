@@ -16,18 +16,18 @@
       this.currentLife = this.data.life;
       //this.currentLife = parameters.goalHealth;
 
-      this.mesh = document.createElement("a-obj-model")
-      this.mesh.setAttribute("id", "goal-mesh")
+      this.mesh = document.createElement("a-entity")
+      this.mesh.setAttribute("id", "goal-mesh");
+      this.mesh.setAttribute("scale", "0.15 0.15 0.15");
       this.setModel("public/assets/models/castle/");
       this.el.appendChild(this.mesh)
-
 
       this.lifeMeshIndicator = document.createElement("a-cylinder")
       // now to rescale because of parent
       this.lifeMeshIndicator.setAttribute("color", "green")
       this.lifeMeshIndicator.setAttribute("height", this.currentLife)
-      this.lifeMeshIndicator.setAttribute("scale", "0.05 0.05 0.05")
-      this.lifeMeshIndicator.setAttribute("position", "0 0 0")
+      this.lifeMeshIndicator.setAttribute("scale", "0.01 0.01 0.01")
+      this.lifeMeshIndicator.setAttribute("position", "-0.124 0.168 -0.113")
       this.el.appendChild(this.lifeMeshIndicator);
 
       NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
@@ -39,10 +39,7 @@
       });
     },
     setModel: function(modelPath){
-      var obj = "model.obj";
-      var mtl = "materials.mtl";
-      this.mesh.setAttribute("src", modelPath + obj);
-      this.mesh.setAttribute("mtl", modelPath + mtl);
+      this.mesh.setAttribute("gltf-model", modelPath + "scene.gltf");
       console.log("[WVRTD-Goal]", "Castle degrading to", modelPath);
     },
     onHit: function(){

@@ -9,8 +9,8 @@
     },
     init: function() {
       this.data.slotID = this.getUnusedSlot();
-      var newpos = document.getElementById(this.data.slotID).getAttribute("position");
-      this.el.setAttribute("position", newpos);
+      this.el.setAttribute("position", document.getElementById(this.data.slotID).getAttribute("position"));
+      this.el.setAttribute("rotation", document.getElementById(this.data.slotID).getAttribute("rotation"));
       console.log("Slot assigned:", this.data.slotID);
     },
     /**
@@ -56,7 +56,7 @@
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
       type        : {type: "string", default: "monster"},
-      scaleFactor : {type: "number", default: 5},
+      startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 20000},
       delay       : {type: "number", default: 10000},
@@ -72,6 +72,8 @@
       this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
+
+      this.el.setAttribute("position", this.data.startPos);
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
@@ -129,7 +131,7 @@
     init: function() {
       this.enemyTypes = {
         "monster": {
-          scaleAdd : 5,
+          startPos: "-1.525 0.24 30.255",
           rotation : "0 180 0",
           durAdd: 20000,
           durMult: 10000,
@@ -140,7 +142,7 @@
           number : 2
         },
         "dragon" : {
-          scaleAdd : 3,
+          startPos: "-9.96 2.834 27.57",
           rotation : "0 0 0",
           durAdd: 20000,
           durMult: 10000,
@@ -166,7 +168,7 @@
             var enemy = document.createElement("a-entity");
             enemy.setAttribute("wvrtd-enemy", {
               type        : type,
-              scaleFactor : Math.random() + enemyType.scaleAdd,
+              startPos    : enemyType.startPos,
               rotation    : enemyType.rotation,
               dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
               delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,
@@ -407,18 +409,18 @@
       this.currentLife = this.data.life;
       //this.currentLife = parameters.goalHealth;
 
-      this.mesh = document.createElement("a-obj-model")
-      this.mesh.setAttribute("id", "goal-mesh")
+      this.mesh = document.createElement("a-entity")
+      this.mesh.setAttribute("id", "goal-mesh");
+      this.mesh.setAttribute("scale", "0.15 0.15 0.15");
       this.setModel("public/assets/models/castle/");
       this.el.appendChild(this.mesh)
-
 
       this.lifeMeshIndicator = document.createElement("a-cylinder")
       // now to rescale because of parent
       this.lifeMeshIndicator.setAttribute("color", "green")
       this.lifeMeshIndicator.setAttribute("height", this.currentLife)
-      this.lifeMeshIndicator.setAttribute("scale", "0.05 0.05 0.05")
-      this.lifeMeshIndicator.setAttribute("position", "0 0 0")
+      this.lifeMeshIndicator.setAttribute("scale", "0.01 0.01 0.01")
+      this.lifeMeshIndicator.setAttribute("position", "-0.124 0.168 -0.113")
       this.el.appendChild(this.lifeMeshIndicator);
 
       NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
@@ -430,10 +432,7 @@
       });
     },
     setModel: function(modelPath){
-      var obj = "model.obj";
-      var mtl = "materials.mtl";
-      this.mesh.setAttribute("src", modelPath + obj);
-      this.mesh.setAttribute("mtl", modelPath + mtl);
+      this.mesh.setAttribute("gltf-model", modelPath + "scene.gltf");
       console.log("[WVRTD-Goal]", "Castle degrading to", modelPath);
     },
     onHit: function(){
@@ -486,9 +485,9 @@
 
       var cursor = document.createElement("a-ring");
       cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 500");
-      cursor.setAttribute("position", "0 0 -20");
-      cursor.setAttribute("radius-inner", 0.5);
-      cursor.setAttribute("radius-outer", 0.8);
+      cursor.setAttribute("position", "0 0 -3");
+      cursor.setAttribute("radius-inner", 0.1);
+      cursor.setAttribute("radius-outer", 0.15);
       cursor.setAttribute("animation", {property: "scale", dir: "normal", dur: 200, easing: "easeInSine", to: "0.1 0.1 0.1", startEvents: "click"});
       cursor.setAttribute("color", "black");
       this.el.appendChild(cursor);

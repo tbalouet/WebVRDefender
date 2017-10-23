@@ -29,7 +29,7 @@
   <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
   <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
   <script src="public/js/aframe-alongpath-component.js"></script>
-  
+
 
 </head>
 <body>
@@ -96,30 +96,27 @@
   <!-- <a-scene fog="color: white; near: 0; far: 105;" game-client game-dynamics-parameters> -->
   <a-scene wvrtd-game-client wvrtd-game-dynamics-parameters>
     <a-assets>
-      <a-asset-item id="monster-obj" src="public/assets/models/monster/model.obj"></a-assets-item>
-      <a-asset-item id="monster-mtl" src="public/assets/models/monster/materials.mtl"></a-assets-item>
-      <a-asset-item id="terrain-obj" src="public/assets/models/terrain/model.obj"></a-assets-item>
-      <a-asset-item id="terrain-mtl" src="public/assets/models/terrain/materials.mtl"></a-assets-item>
-      <a-asset-item id="turet-obj" src="public/assets/models/turet/model.obj"></a-assets-item>
-      <a-asset-item id="turet-mtl" src="public/assets/models/turet/materials.mtl"></a-assets-item>
-      <a-asset-item id="drakar-obj" src="public/assets/models/drakar/model.obj"></a-assets-item>
-      <a-asset-item id="drakar-mtl" src="public/assets/models/drakar/materials.mtl"></a-assets-item>
-      <a-asset-item id="dragon-obj" src="public/assets/models/dragon/model.obj"></a-assets-item>
-      <a-asset-item id="dragon-mtl" src="public/assets/models/dragon/materials.mtl"></a-assets-item>
+      <a-asset-item id="terrain-gltf" src="public/assets/models/level_snow/scene.gltf"></a-assets-item>
+
+      <a-asset-item id="drakar-gltf" src="public/assets/models/drakar/scene.gltf"></a-assets-item>
+      <a-asset-item id="monster-gltf" src="public/assets/models/monster/scene.gltf"></a-assets-item>
+      <a-asset-item id="dragon-gltf" src="public/assets/models/dragon/scene.gltf"></a-assets-item>
+
+      <a-asset-item id="turret-gltf" src="public/assets/models/turret_head/scene.gltf"></a-assets-item>
 
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
-          <a-entity obj-model="obj: #turet-obj; mtl: #turet-mtl" position="0 -1 0" rotation="0 180 0" scale="3 3 3"></a-entity>
+          <a-entity gltf-model="#turret-gltf" position="0 -0.2 0" rotation="0 180 0" scale="3 3 3"></a-entity>
         </a-entity>
       </script>
       <script id="enemy-monster-template" type="text/html">
         <a-entity class="enemy">
-          <a-entity obj-model="obj: #monster-obj; mtl: #monster-mtl" rotation="180 0 90" scale="5 5 5"></a-entity>
+          <a-entity gltf-model="#monster-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
       </script>
       <script id="enemy-dragon-template" type="text/html">
         <a-entity class="enemy">
-          <a-entity obj-model="obj: #dragon-obj; mtl: #dragon-mtl" rotation="0 180 90" scale="3 3 3"></a-entity>
+          <a-entity gltf-model="#dragon-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
       </script>
     </a-assets>
@@ -127,38 +124,48 @@
 
     <a-entity map>
       <a-entity wvrtd-slot-threedof >
-        <a-entity id="slot0" position="-9.5 13.6 -12"></a-entity>
-        <a-entity id="slot1" position="43.6 8.7 -41"></a-entity>
-        <a-entity id="slot2" position="28 13.8 -22.7"></a-entity>
-        <a-entity id="slot3" position="-43.2 28.7 -12.9"></a-entity>
+        <a-entity id="slot0" position="1.691 5.189 8.424" rotation="0 180 0"></a-entity>
+        <a-entity id="slot1" position="-0.139 5.075 1.08" rotation="0 -90 0"></a-entity>
+        <a-entity id="slot2" position="6.455 6.100 -6.196" rotation="0 90 0"></a-entity>
+        <a-entity id="slot3" position="-1.15 5.372 -12.175" rotation="0 -90 0"></a-entity>
       </a-entity>
       <a-curve id="monster-track" curve="">
-	      <a-curve-point position="1.181 1.682 -50.581" curve-point=""></a-curve-point>
-	      <a-curve-point position="31.907 0 -42.353" curve-point=""></a-curve-point>
-	      <a-curve-point position="20 1 -29" curve-point=""></a-curve-point>
-	      <a-curve-point position="20 3.625 0" curve-point=""></a-curve-point>
-	      <a-curve-point position="-21 0.508 22" curve-point=""></a-curve-point>
-	      <a-curve-point position="-17.74 1.31 54.772" curve-point=""></a-curve-point>
+        <a-curve-point position="-1.525 0.24 30.255" curve-point=""></a-curve-point>
+        <a-curve-point position="-1.228 0.122 28.881" curve-point=""></a-curve-point>
+        <a-curve-point position="-3.384 0.778 24.914" curve-point=""></a-curve-point>
+        <a-curve-point position="2.236 0.615 20.623" curve-point=""></a-curve-point>
+        <a-curve-point position="3.609 0.619 14.992" curve-point=""></a-curve-point>
+        <a-curve-point position="-2.319 1.191 11.408" curve-point=""></a-curve-point>
+        <a-curve-point position="-0.357 1.246 8.238" curve-point=""></a-curve-point>
+        <a-curve-point position="-1.202 1.636 4.824" curve-point=""></a-curve-point>
+        <a-curve-point position="4.21 1.339 2.506" curve-point=""></a-curve-point>
+        <a-curve-point position="-0.546 1.408 -4.355" curve-point=""></a-curve-point>
+        <a-curve-point position="2.557 0.874 -9.109" curve-point=""></a-curve-point>
+        <a-curve-point position="3.914 0.209 -14.394" curve-point=""></a-curve-point>
+        <a-curve-point position="-0.047 0.775 -20.77" curve-point=""></a-curve-point>
       </a-curve>
       <a-curve id="dragon-track" curve="">
-	      <a-curve-point position="31.907 30 -92.353" curve-point=""></a-curve-point>
-	      <a-curve-point position="-21.496 15 -45.13" curve-point=""></a-curve-point>
-	      <a-curve-point position="-35.7 29.321 -24.217" curve-point=""></a-curve-point>
-	      <a-curve-point position="-26.953 24.066 -3.803" curve-point=""></a-curve-point>
-	      <a-curve-point position="20 35 30.235" curve-point=""></a-curve-point>
-	      <a-curve-point position="-7.423 24.405 49.507" curve-point=""></a-curve-point>
-	      <a-curve-point position="-7.423 30 59.895" curve-point=""></a-curve-point>
-	      <a-curve-point position="-7.423 20 89.895" curve-point=""></a-curve-point>
+        <a-curve-point position="-9.96 2.834 27.57" curve-point=""></a-curve-point>
+        <a-curve-point position="-0.095 4.217 22.069" curve-point=""></a-curve-point>
+        <a-curve-point position="3.252 5.916 13.39" curve-point=""></a-curve-point>
+        <a-curve-point position="-2.387 4.946 9.895" curve-point=""></a-curve-point>
+        <a-curve-point position="0.896 4.484 4.025" curve-point=""></a-curve-point>
+        <a-curve-point position="5.037 4.484 1.172" curve-point=""></a-curve-point>
+        <a-curve-point position="2.513 4.767 -3.721" curve-point=""></a-curve-point>
+        <a-curve-point position="0.214 3.825 -8.748" curve-point=""></a-curve-point>
+        <a-curve-point position="3.622 2.559 -12.255" curve-point=""></a-curve-point>
+        <a-curve-point position="1.18 4.153 -15.68" curve-point=""></a-curve-point>
+        <a-curve-point position="0.284 5.96 -24.429" curve-point=""></a-curve-point>
       </a-curve>
     </a-entity>
 
-    <a-obj-model src="#terrain-obj" mtl="#terrain-mtl" position="0 11 0" scale="100 100 100"></a-obj-model>
+    <a-entity gltf-model="#terrain-gltf" position="0 1.58 0" ></a-entity>
 
-    <a-entity wvrtd-goal="life=10" position="-17 5 80" scale="50 50 50"></a-entity>
+    <a-entity wvrtd-goal="life=10" position="-0.224 0.141 -24.304" scale="35 35 35"></a-entity>
 
-    <a-obj-model src="#drakar-obj" mtl="#drakar-mtl" position="0 1 -50" scale="10 10 10" rotation="0 -90 -10">
-	    <a-animation attribute="rotation" dur="10000" to="0 -90 10" repeat="indefinite" direction="alternate"></a-animation>
-    </a-obj-model>
+    <a-entity gltf-model="#drakar-gltf" position="-1.172 0.128 30.559" rotation="-5 0 -10" scale="2 2 2">
+	    <a-animation attribute="rotation" dur="10000" to="5 0 10" repeat="indefinite" direction="alternate"></a-animation>
+    </a-entity>
 
     <a-sky color="white"></a-sky>
   </a-scene>
