@@ -125,60 +125,67 @@
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {
+    dependencies: ["wvrtd-game-dynamics-parameters"],
     init: function() {
-      this.enemyTypes = [ {
-        type : "monster",
-        scaleAdd : 5,
-        rotation : "0 180 0",
-        durAdd: 20000,
-        durMult: 10000,
-        delayAdd: 5000,
-        delayMult: 5000,
-        health: 100,
-        soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
-        number : 2
-      },{
-        type : "dragon",
-        scaleAdd : 3,
-        rotation : "0 0 0",
-        durAdd: 20000,
-        durMult: 10000,
-        delayAdd: 5000,
-        delayMult: 5000,
-        health: 200,
-        soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
-        number : 3
-      }];
+      this.enemyTypes = {
+        "monster": {
+          scaleAdd : 5,
+          rotation : "0 180 0",
+          durAdd: 20000,
+          durMult: 10000,
+          delayAdd: 5000,
+          delayMult: 5000,
+          health: 100,
+          soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
+          number : 2
+        },
+        "dragon" : {
+          scaleAdd : 3,
+          rotation : "0 0 0",
+          durAdd: 20000,
+          durMult: 10000,
+          delayAdd: 5000,
+          delayMult: 5000,
+          health: 200,
+          soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
+          number : 3
+        }};
+        // NB: number and health is now overwritten by the game dynamics component
 
-      this.loadMonsters();
-    },
-    loadMonsters: function(){
-      // wave 1
-      for (var i=0; i < this.enemyTypes.length; i++){
-        for (var j=0; j< this.enemyTypes[i].number; j++){
-          var enemy = document.createElement("a-entity");
-          enemy.setAttribute("wvrtd-enemy", {
-            type        : this.enemyTypes[i].type,
-            scaleFactor : Math.random() + this.enemyTypes[i].scaleAdd,
-            rotation    : this.enemyTypes[i].rotation,
-            dur         : this.enemyTypes[i].durAdd + Math.random() * this.enemyTypes[i].durMult,
-            delay       : this.enemyTypes[i].delayAdd + Math.random() * this.enemyTypes[i].delayMult,
-            health      : this.enemyTypes[i].health,
-            soundKill   : this.enemyTypes[i].soundKill
-          });
-          this.el.appendChild(enemy);
+        this.loadMonsters();
+      },
+      loadMonsters: function(){
+        var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
+        console.log(parameters.waves)
+        for (var i=0; i < parameters.waves.length; i++){
+          var type = parameters.waves[i];
+          var health = parameters.wavesHealth[i];
+          var enemyType = this.enemyTypes[type]
+          console.log('generating wave of', type, 'with properties', enemyType)
+          for (var j=0; j< parameters.wavesSize[i]; j++){
+            var enemy = document.createElement("a-entity");
+            enemy.setAttribute("wvrtd-enemy", {
+              type        : type,
+              scaleFactor : Math.random() + enemyType.scaleAdd,
+              rotation    : enemyType.rotation,
+              dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
+              delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,
+              health      : health,
+              soundKill   : enemyType.soundKill
+            });
+            this.el.appendChild(enemy);
+          }
+        }
+      },
+      start: function(){
+        var enemys = this.el.querySelectorAll("[wvrtd-enemy]");
+        for(let i = 0; i < enemys.length; ++i){
+          enemys[i].components["wvrtd-enemy"].start();
         }
       }
-    },
-    start: function(){
-      var enemys = this.el.querySelectorAll("[wvrtd-enemy]");
-      for(let i = 0; i < enemys.length; ++i){
-        enemys[i].components["wvrtd-enemy"].start();
-      }
-    }
-  });
+    });
 
-})();
+  })();
 
 },{}],3:[function(require,module,exports){
 /* global AFRAME, NAF */
@@ -366,8 +373,16 @@
   "use strict";
 
   AFRAME.registerComponent('wvrtd-game-dynamics-parameters', {
+    schema:{
+      waves       : {type: "array",  default: ["monster", "dragon" ]},
+      wavesSize   : {type: "array",  default: [3, 2 ]},
+      wavesHealth : {type: "array",  default: [100, 200 ]},
+      wavesPace   : {type: "array",  default: [100, 50 ]},
+      goalHeatlh  : {type: "number", default: 15}
+    },
     init: function() {
-      console.log("game parameters loaded but empty")
+      console.log("game parameters loaded", this.data)
+      // can then be accessed as AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data
     },
   });
 
@@ -379,13 +394,18 @@
   "use strict";
 
   AFRAME.registerComponent('wvrtd-goal', {
+    dependencies: ["wvrtd-game-dynamics-parameters"],
     schema: {
       life: { type: "number", default: 10 }
+	// overwritten by the game dynamics parameters component
     },
     init: function() {
+      //var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
+      // despite the dependencies the scene at the time has no available components
       var that = this;
 
       this.currentLife = this.data.life;
+      //this.currentLife = parameters.goalHealth;
 
       this.mesh = document.createElement("a-obj-model")
       this.mesh.setAttribute("id", "goal-mesh")
@@ -587,7 +607,12 @@ var GameLaunchUI;
       document.querySelector("#roomInputBtn").classList.remove("hide");
 
       document.querySelector("#roomChoiceGo").addEventListener("click", function(){
-        location.href = location.origin + location.pathname + "?room=" + document.querySelector("#room_name").value;
+	var roomName = document.querySelector("#room_name").value;
+	if (roomName.length == 0){
+	// if the user tries to enter a room without a name, generate one
+		roomName = "RandomRoom"+parseInt( Math.random()*10000 )
+	}
+        location.href = location.origin + location.pathname + "?room=" + roomName
       });
     }
     document.querySelector("#createGameBtn").addEventListener("click", onGameChoiceClick);
@@ -684,6 +709,7 @@ var GameLaunchUI;
 })();
 
 module.exports = GameLaunchUI;
+
 },{"./devDet.js":7}],9:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
