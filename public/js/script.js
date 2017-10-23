@@ -65,6 +65,8 @@
     },
     init: function() {
       var that = this;
+      this.hasFinished = false;
+
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
@@ -77,9 +79,12 @@
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
-        if (that.el.getAttribute("visible")){
+        if (that.data.health > 0){
           document.querySelector("[wvrtd-goal]").emit("enemy-entered");
         }
+        that.hasFinished = true;
+        document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+        this.el.setAttribute("visible", false);
       });
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
@@ -127,7 +132,7 @@
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {
-    dependencies: ["wvrtd-game-dynamics-parameters"],
+    dependencies: ["wvrtd-enemy-wave"],
     init: function() {
       this.enemyTypes = {
         "monster": {
@@ -135,7 +140,6 @@
           rotation : "0 180 0",
           durAdd: 20000,
           durMult: 10000,
-          delayAdd: 5000,
           delayMult: 5000,
           health: 100,
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
@@ -146,33 +150,32 @@
           rotation : "0 0 0",
           durAdd: 20000,
           durMult: 10000,
-          delayAdd: 5000,
           delayMult: 5000,
           health: 200,
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
           number : 3
         }};
         // NB: number and health is now overwritten by the game dynamics component
-
-        this.loadMonsters();
       },
-      loadMonsters: function(){
-        var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
-        console.log(parameters.waves)
-        for (var i=0; i < parameters.waves.length; i++){
-          var type = parameters.waves[i];
-          var health = parameters.wavesHealth[i];
-          var enemyType = this.enemyTypes[type]
-          console.log('generating wave of', type, 'with properties', enemyType)
-          for (var j=0; j< parameters.wavesSize[i]; j++){
+      removeEnemys: function(){
+        document.querySelectorAll("[wvrtd-enemy]").forEach(function(enemy){enemy.parentNode.removeChild(enemy);});
+      },
+      loadMonsters: function(enemys){
+        this.removeEnemys();
+
+        for (var i=0; i < enemys.length; i++){
+          var enemyType = this.enemyTypes[enemys[i].type]
+
+          for (var j=0; j< enemys[i].number; j++){
             var enemy = document.createElement("a-entity");
+
             enemy.setAttribute("wvrtd-enemy", {
-              type        : type,
+              type        : enemys[i].type,
               startPos    : enemyType.startPos,
               rotation    : enemyType.rotation,
               dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
-              delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,
-              health      : health,
+              delay       : Math.random() * enemyType.delayMult,
+              health      : enemys[i].health,
               soundKill   : enemyType.soundKill
             });
             this.el.appendChild(enemy);
@@ -190,6 +193,73 @@
   })();
 
 },{}],3:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent("wvrtd-enemy-wave", {
+    schema:{
+      waveTimeout  : {type: "number", default: 10000}
+    },
+    init: function() {
+      this.waves = {
+        "wave1" : {
+          enemys : [
+            {type : "monster", number : 5, health : 100}
+          ],
+          timeout: 10000
+        },
+        "wave2" : {
+          enemys : [
+            {type : "monster", number : 5, health : 100},
+            {type : "dragon", number : 3, health : 200},
+          ],
+          timeout: 10000
+        },
+      }
+
+      this.currentWave = 0;
+
+
+      this.el.addEventListener("enemy-finished", this.onEnemyFinished.bind(this));
+    },
+    launchWave: function(waveNumber){
+      this.currentWave = waveNumber || ++this.currentWave;
+
+      if(!this.waves["wave" + this.currentWave]){
+        this.wavesFinished();
+        return;
+      }
+
+      document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(this.waves["wave" + this.currentWave].enemys);
+      setTimeout(function(){
+        // document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+      }, this.waves["wave" + this.currentWave].timeout);
+    },
+    launchNextWave: function(){
+      this.launchWave();
+    },
+    onEnemyFinished: function(){
+      var enemys = document.querySelectorAll("[wvrtd-enemy]");
+      var allFinished = true;
+      for(var i = 0; i < enemys.length; ++i){
+        if(!enemys[i].components["wvrtd-enemy"].hasFinished){
+          allFinished = false;
+          break;
+        }
+      }
+      if(allFinished){
+        this.launchNextWave();
+      }
+    },
+    wavesFinished: function(){
+      console.log("====GAME FINISHED====");
+    }
+  });
+
+})();
+
+},{}],4:[function(require,module,exports){
 /* global AFRAME, NAF */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -205,8 +275,9 @@
       //General game state with informations about all clients
       this.gameState = undefined;
       this.serverConnected = false;
+      this.mainClient = false;
     },
-    setDevice: function(deviceType){      
+    setDevice: function(deviceType){
       //TODO: Elaborate clientstate based on device
       this.clientState = {
         ID     : 0,
@@ -251,7 +322,7 @@
         function(msgType, msgData){
           that.gameState = msgData.gameState;
           console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
-          WVRTD.gameLaunchUI.createPlayerList(that.gameState); 
+          WVRTD.gameLaunchUI.createPlayerList(that.gameState);
 
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
@@ -291,7 +362,7 @@
       onGameStateUpdate : function(senderID, msg, data){
         this.gameState = data.gameState;
         console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
-        WVRTD.gameLaunchUI.createPlayerList(this.gameState);  
+        WVRTD.gameLaunchUI.createPlayerList(this.gameState);
       },
       onClientDisconnected: function(evt){
         this.sendEvent("getGameState");
@@ -316,10 +387,7 @@
 
         if(Object.values(this.gameState.clients).length === 1){
           //If user is the first one, he's considered the game master
-          //He'll then create an enemy pool
-          let enemyPool = document.createElement("a-entity");
-          enemyPool.setAttribute("wvrtd-enemy-pool", "");
-          document.querySelector("a-scene").appendChild(enemyPool);
+          this.mainClient = true;
         }
         else{
           //Otherwise, he'll be looking for enemy entities to be created
@@ -357,10 +425,8 @@
         WVRTD.gameLaunchUI.hideIntroUI();
         document.querySelector("#windSound").components["sound"].playSound();
 
-        setTimeout(function(){
-          document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
-          document.querySelector("#windSound").components["sound"].play();
-        }, 10000);
+        document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
+        document.querySelector("#windSound").components["sound"].play();
       },
       onGameLaunched : function(senderID, msg, data){
         WVRTD.gameLaunchUI.hideIntroUI();
@@ -369,26 +435,6 @@
     });
 
   })();
-
-},{}],4:[function(require,module,exports){
-(function(){
-  "use strict";
-
-  AFRAME.registerComponent('wvrtd-game-dynamics-parameters', {
-    schema:{
-      waves       : {type: "array",  default: ["monster", "dragon" ]},
-      wavesSize   : {type: "array",  default: [3, 2 ]},
-      wavesHealth : {type: "array",  default: [100, 200 ]},
-      wavesPace   : {type: "array",  default: [100, 50 ]},
-      goalHeatlh  : {type: "number", default: 15}
-    },
-    init: function() {
-      console.log("game parameters loaded", this.data)
-      // can then be accessed as AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data
-    },
-  });
-
-})()
 
 },{}],5:[function(require,module,exports){
 /* global AFRAME */
@@ -723,7 +769,7 @@ window.WVRTD = {};
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
-  require("./components/gameDynamicsParameters.js");
+  require("./components/enemy_wave.js");
   var GameLaunchUI = require("./gameLaunchUI.js");
 
 
@@ -744,7 +790,7 @@ window.WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/gameClient.js":3,"./components/gameDynamicsParameters.js":4,"./components/goal.js":5,"./components/player.js":6,"./gameLaunchUI.js":8}],10:[function(require,module,exports){
+},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/player.js":6,"./gameLaunchUI.js":8}],10:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

@@ -14,6 +14,8 @@
     },
     init: function() {
       var that = this;
+      this.hasFinished = false;
+
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
@@ -26,9 +28,12 @@
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', function () {
-        if (that.el.getAttribute("visible")){
+        if (that.data.health > 0){
           document.querySelector("[wvrtd-goal]").emit("enemy-entered");
         }
+        that.hasFinished = true;
+        document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+        this.el.setAttribute("visible", false);
       });
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
@@ -76,7 +81,7 @@
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {
-    dependencies: ["wvrtd-game-dynamics-parameters"],
+    dependencies: ["wvrtd-enemy-wave"],
     init: function() {
       this.enemyTypes = {
         "monster": {
@@ -84,7 +89,6 @@
           rotation : "0 180 0",
           durAdd: 20000,
           durMult: 10000,
-          delayAdd: 5000,
           delayMult: 5000,
           health: 100,
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
@@ -95,33 +99,32 @@
           rotation : "0 0 0",
           durAdd: 20000,
           durMult: 10000,
-          delayAdd: 5000,
           delayMult: 5000,
           health: 200,
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
           number : 3
         }};
         // NB: number and health is now overwritten by the game dynamics component
-
-        this.loadMonsters();
       },
-      loadMonsters: function(){
-        var parameters = AFRAME.scenes[0].components["wvrtd-game-dynamics-parameters"].data;
-        console.log(parameters.waves)
-        for (var i=0; i < parameters.waves.length; i++){
-          var type = parameters.waves[i];
-          var health = parameters.wavesHealth[i];
-          var enemyType = this.enemyTypes[type]
-          console.log('generating wave of', type, 'with properties', enemyType)
-          for (var j=0; j< parameters.wavesSize[i]; j++){
+      removeEnemys: function(){
+        document.querySelectorAll("[wvrtd-enemy]").forEach(function(enemy){enemy.parentNode.removeChild(enemy);});
+      },
+      loadMonsters: function(enemys){
+        this.removeEnemys();
+
+        for (var i=0; i < enemys.length; i++){
+          var enemyType = this.enemyTypes[enemys[i].type]
+
+          for (var j=0; j< enemys[i].number; j++){
             var enemy = document.createElement("a-entity");
+
             enemy.setAttribute("wvrtd-enemy", {
-              type        : type,
+              type        : enemys[i].type,
               startPos    : enemyType.startPos,
               rotation    : enemyType.rotation,
               dur         : enemyType.durAdd + Math.random() * enemyType.durMult,
-              delay       : enemyType.delayAdd + Math.random() * enemyType.delayMult,
-              health      : health,
+              delay       : Math.random() * enemyType.delayMult,
+              health      : enemys[i].health,
               soundKill   : enemyType.soundKill
             });
             this.el.appendChild(enemy);

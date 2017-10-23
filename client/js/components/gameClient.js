@@ -13,8 +13,9 @@
       //General game state with informations about all clients
       this.gameState = undefined;
       this.serverConnected = false;
+      this.mainClient = false;
     },
-    setDevice: function(deviceType){      
+    setDevice: function(deviceType){
       //TODO: Elaborate clientstate based on device
       this.clientState = {
         ID     : 0,
@@ -59,7 +60,7 @@
         function(msgType, msgData){
           that.gameState = msgData.gameState;
           console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
-          WVRTD.gameLaunchUI.createPlayerList(that.gameState); 
+          WVRTD.gameLaunchUI.createPlayerList(that.gameState);
 
           setTimeout(that.sendGameStateUpdate.bind(that), 250);
 
@@ -99,7 +100,7 @@
       onGameStateUpdate : function(senderID, msg, data){
         this.gameState = data.gameState;
         console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
-        WVRTD.gameLaunchUI.createPlayerList(this.gameState);  
+        WVRTD.gameLaunchUI.createPlayerList(this.gameState);
       },
       onClientDisconnected: function(evt){
         this.sendEvent("getGameState");
@@ -124,10 +125,7 @@
 
         if(Object.values(this.gameState.clients).length === 1){
           //If user is the first one, he's considered the game master
-          //He'll then create an enemy pool
-          let enemyPool = document.createElement("a-entity");
-          enemyPool.setAttribute("wvrtd-enemy-pool", "");
-          document.querySelector("a-scene").appendChild(enemyPool);
+          this.mainClient = true;
         }
         else{
           //Otherwise, he'll be looking for enemy entities to be created
@@ -165,10 +163,8 @@
         WVRTD.gameLaunchUI.hideIntroUI();
         document.querySelector("#windSound").components["sound"].playSound();
 
-        setTimeout(function(){
-          document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
-          document.querySelector("#windSound").components["sound"].play();
-        }, 10000);
+        document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
+        document.querySelector("#windSound").components["sound"].play();
       },
       onGameLaunched : function(senderID, msg, data){
         WVRTD.gameLaunchUI.hideIntroUI();

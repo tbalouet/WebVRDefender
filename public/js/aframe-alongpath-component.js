@@ -158,15 +158,19 @@
 	                // Update Rotation of Entity
 	                // Based on http://jsfiddle.net/qGPTT/133/
 	                if (this.data.rotate === true) {
-	                    var axis = new THREE.Vector3();
-	                    var up = new THREE.Vector3(0, 1, 0);
-	                    var tangent = curve.getTangentAt(i).normalize();
-
-	                    axis.crossVectors(up, tangent).normalize();
-
-	                    var radians = Math.acos(up.dot(tangent));
-
-	                    this.el.object3D.quaternion.setFromAxisAngle(axis, radians);
+                      var nextPoint = curve.getPointAt(Math.min(i*1.001, 1));
+                      nextPoint.negate();
+                      this.el.object3D.lookAt(nextPoint);
+	                    // var axis = new THREE.Vector3();
+	                    // var up = new THREE.Vector3(0, 0, 0);
+	                    // var tangent = curve.getTangentAt(i).normalize();
+                      //
+	                    // axis.crossVectors(up, tangent).normalize();
+                      // axis.x = axis.z = 0;
+                      //
+	                    // var radians = Math.acos(up.dot(tangent));
+                      //
+	                    // this.el.object3D.quaternion.setFromAxisAngle(axis, radians);
 	                }
 
 	                // Check for Active-Triggers

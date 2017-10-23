@@ -94,7 +94,7 @@
   <!-- A-FRAME ELEMENTS -->
 
   <!-- <a-scene fog="color: white; near: 0; far: 105;" game-client game-dynamics-parameters> -->
-  <a-scene wvrtd-game-client wvrtd-game-dynamics-parameters>
+  <a-scene wvrtd-game-client wvrtd-game-enemy-wave>
     <a-assets>
       <a-asset-item id="terrain-gltf" src="public/assets/models/level_snow/scene.gltf"></a-assets-item>
 
@@ -158,6 +158,8 @@
         <a-curve-point position="0.284 5.96 -24.429" curve-point=""></a-curve-point>
       </a-curve>
     </a-entity>
+
+    <a-entity wvrtd-enemy-pool=""></a-entity>
 
     <a-entity gltf-model="#terrain-gltf" position="0 1.58 0" ></a-entity>
 
