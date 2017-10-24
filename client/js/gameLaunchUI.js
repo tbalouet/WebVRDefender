@@ -75,17 +75,18 @@ var GameLaunchUI;
     switch(WVRTD.devDet.detectedDevice){
       case WVRTD.devDet.deviceType.GEARVR:
       case WVRTD.devDet.deviceType.MOBILE:
-      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
-      createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
-      break;
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
+        createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
+        break;
       case WVRTD.devDet.deviceType.VIVE:
       case WVRTD.devDet.deviceType.RIFT:
-      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
-      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-      break;
+      case WVRTD.devDet.deviceType.WINDOWSMR:
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
       case WVRTD.devDet.deviceType.DESKTOP:
-      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-      break;
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
     }
   };
 
@@ -129,7 +130,19 @@ var GameLaunchUI;
   };
 
   GameLaunchUI.prototype.hideIntroUI = function(){
-    document.querySelector("#introContainer").classList.add("hide");
+    var clientType = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].clientState.type;
+    if(clientType !== WVRTD.devDet.deviceType.MOBILE && clientType !== WVRTD.devDet.deviceType.DESKTOP){
+      document.querySelector("#playersListCard").classList.add("hide");
+      document.querySelector("#enterVRCard").classList.remove("hide");
+
+      document.querySelector("#enterVRCard").addEventListener("click", function(){
+        document.querySelector("a-scene").enterVR();
+        document.querySelector("#introContainer").classList.add("hide");
+      })
+    }
+    else{
+      document.querySelector("#introContainer").classList.add("hide");
+    }
   };
 })();
 

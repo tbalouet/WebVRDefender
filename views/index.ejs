@@ -88,6 +88,9 @@
           <i class="material-icons right">send</i>
         </button>
       </div>
+      <div id="enterVRCard" class="card blue-grey darken-1 hide">
+        <button id="enterVRButton" class="btn waves-effect waves-light" type="submit" name="action">ENTER VR</button>
+      </div>
     </div>
   </div>
 
@@ -105,6 +108,10 @@
       <a-asset-item id="turret-gltf" src="public/assets/models/turret_head/scene.gltf"></a-assets-item>
       <a-asset-item id="panda-gltf" src="public/assets/models/purple_panda/scene.gltf"></a-assets-item>
 
+      <a-asset-item id="giant-head-gltf" src="public/assets/models/giant_head/scene.gltf"></a-assets-item>
+      <a-asset-item id="giant-hand-right-gltf" src="public/assets/models/giant_hand_right/scene.gltf"></a-assets-item>
+      <a-asset-item id="giant-hand-left-gltf" src="public/assets/models/giant_hand_left/scene.gltf"></a-assets-item>
+
       <!-- PLAYERS TEMPLATES -->
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
@@ -114,6 +121,21 @@
       <script id="panda-template" type="text/html">
         <a-entity class="panda">
           <a-entity gltf-model="#panda-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+        </a-entity>
+      </script>
+      <script id="giant-head-template" type="text/html">
+        <a-entity class="giant-head">
+          <a-entity gltf-model="#giant-head-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+        </a-entity>
+      </script>
+      <script id="giant-hand-right-template" type="text/html">
+        <a-entity class="giant-hand-right">
+          <a-entity gltf-model="#giant-hand-right-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-entity>
+        </a-entity>
+      </script>
+      <script id="giant-hand-left-template" type="text/html">
+        <a-entity class="giant-hand-left">
+          <a-entity gltf-model="#giant-hand-left-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-entity>
         </a-entity>
       </script>
 
@@ -129,6 +151,7 @@
         </a-entity>
       </script>
     </a-assets>
+
     <a-entity id="windSound" sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); loop:true;"></a-entity>
 
     <a-entity map>

@@ -388,10 +388,15 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
-            player.setAttribute("wvrtd-player-threedof", { type : this.clientState.type});
+            player.setAttribute("wvrtd-player-threedof", {});
             break;
           case WVRTD.devDet.deviceType.DESKTOP:
-            player.setAttribute("wvrtd-player-desktop", { type : this.clientState.type});
+            player.setAttribute("wvrtd-player-desktop", {});
+            break;
+          case WVRTD.devDet.deviceType.VIVE:
+          case WVRTD.devDet.deviceType.RIFT:
+          case WVRTD.devDet.deviceType.WINDOWSMR:
+            player.setAttribute("wvrtd-player-sixdof", {});
             break;
         }
 
@@ -663,11 +668,41 @@
 (function(){
   "use strict";
 
+  AFRAME.registerComponent("wvrtd-player-sixdof", {
+    init: function() {
+      this.el.setAttribute("networked", {
+        template          : "#giant-head-template",
+        showLocalTemplate : false
+      });
+
+      this.leftHand = document.createElement("a-entity");
+      this.leftHand.id = "leftHand" + (Math.floor(Math.random() * 100));
+      this.leftHand.setAttribute("networked", {
+        template          : "#giant-hand-left-template",
+        showLocalTemplate : true
+      });
+      this.leftHand.setAttribute("windows-motion-controls", {hand : "left", model: false});
+      document.querySelector("a-scene").appendChild(this.leftHand);
+
+      this.rightHand = document.createElement("a-entity");
+      this.rightHand.id = "rightHand" + (Math.floor(Math.random() * 100));
+      this.rightHand.setAttribute("networked", {
+        template          : "#giant-hand-right-template",
+        showLocalTemplate : true
+      });
+      this.rightHand.setAttribute("windows-motion-controls", {hand : "right", model: false});
+      document.querySelector("a-scene").appendChild(this.rightHand);
+    }
+  });
+
+})();
+
+},{}],9:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
   AFRAME.registerComponent("wvrtd-player-threedof", {
-    schema: {
-      slotID: { type: "string", default: "" },
-      type: { type: "string", default: "" }
-    },
     init: function() {
       var that = this;
       this.el.setAttribute("networked", {
@@ -705,13 +740,13 @@
 
 })();
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var DevDet = {};
 
 (function(){
     "use strict";
 
-//AFrame device utils 
+//AFrame device utils
 var AFDevice = AFRAME.utils.device;
 
 //vr device enum setup
@@ -721,7 +756,7 @@ function Enum(values){
     }
     return this;
 }
-DevDet.deviceType = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'UNKNOWN']);
+DevDet.deviceType = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'WINDOWSMR', 'UNKNOWN']);
 
 //detected device
 DevDet.detectedDevice = null;
@@ -732,6 +767,8 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
   try{
     navigator.getVRDisplays().then(function (displays) {
       console.log("[DevDet devices]", displays[0]);
+
+      DevDet.displayDevice = displays[0];
 
       if(AFDevice.isGearVR()){
         DevDet.detectedDevice = DevDet.deviceType.GEARVR;
@@ -746,10 +783,13 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
             break;
           case 'OpenVR HMD':
             DevDet.detectedDevice = DevDet.deviceType.VIVE;
-            break;          
+            break;
           case 'HTC Vive MV':
             DevDet.detectedDevice = DevDet.deviceType.VIVE;
-            break;          
+            break;
+          case 'Acer AH100':
+            DevDet.detectedDevice = DevDet.deviceType.WINDOWSMR;
+            break;
           default: //undetected
             console.log('undetected device name: ' + displays[0].displayName);
             break;
@@ -757,11 +797,11 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
       }
       else if(displays.length === 0){
         DevDet.detectedDevice = DevDet.deviceType.DESKTOP;
+        DevDet.displayDevice = {displayName: "desktop"};
       }
       else {
         DevDet.detectedDevice = DevDet.deviceType.UNKNOWN;
       }
-      DevDet.displayDevice = displays[0];
       resolve(DevDet);
     });
   }
@@ -774,7 +814,7 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
 
 module.exports = DevDet;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var GameLaunchUI;
 
 (function(){
@@ -852,17 +892,18 @@ var GameLaunchUI;
     switch(WVRTD.devDet.detectedDevice){
       case WVRTD.devDet.deviceType.GEARVR:
       case WVRTD.devDet.deviceType.MOBILE:
-      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
-      createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
-      break;
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
+        createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
+        break;
       case WVRTD.devDet.deviceType.VIVE:
       case WVRTD.devDet.deviceType.RIFT:
-      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
-      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-      break;
+      case WVRTD.devDet.deviceType.WINDOWSMR:
+        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
       case WVRTD.devDet.deviceType.DESKTOP:
-      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-      break;
+        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+        break;
     }
   };
 
@@ -906,13 +947,25 @@ var GameLaunchUI;
   };
 
   GameLaunchUI.prototype.hideIntroUI = function(){
-    document.querySelector("#introContainer").classList.add("hide");
+    var clientType = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].clientState.type;
+    if(clientType !== WVRTD.devDet.deviceType.MOBILE && clientType !== WVRTD.devDet.deviceType.DESKTOP){
+      document.querySelector("#playersListCard").classList.add("hide");
+      document.querySelector("#enterVRCard").classList.remove("hide");
+
+      document.querySelector("#enterVRCard").addEventListener("click", function(){
+        document.querySelector("a-scene").enterVR();
+        document.querySelector("#introContainer").classList.add("hide");
+      })
+    }
+    else{
+      document.querySelector("#introContainer").classList.add("hide");
+    }
   };
 })();
 
 module.exports = GameLaunchUI;
 
-},{"./devDet.js":9}],11:[function(require,module,exports){
+},{"./devDet.js":10}],12:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -924,6 +977,7 @@ window.WVRTD = {};
   require("./components/assign_slot.js");
   require("./components/lookdown-controls.js");
   require("./components/player_threedof.js");
+  require("./components/player_sixdof.js");
   require("./components/player_desktop.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
@@ -949,7 +1003,7 @@ window.WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":12,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/lookdown-controls.js":6,"./components/player_desktop.js":7,"./components/player_threedof.js":8,"./gameLaunchUI.js":10}],12:[function(require,module,exports){
+},{"../lib/networked-aframe.js":13,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/lookdown-controls.js":6,"./components/player_desktop.js":7,"./components/player_sixdof.js":8,"./components/player_threedof.js":9,"./gameLaunchUI.js":11}],13:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -15599,4 +15653,4 @@ window.WVRTD = {};
 /***/ })
 /******/ ]);
 
-},{}]},{},[11]);
+},{}]},{},[12]);

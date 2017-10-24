@@ -3,7 +3,7 @@ var DevDet = {};
 (function(){
     "use strict";
 
-//AFrame device utils 
+//AFrame device utils
 var AFDevice = AFRAME.utils.device;
 
 //vr device enum setup
@@ -13,7 +13,7 @@ function Enum(values){
     }
     return this;
 }
-DevDet.deviceType = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'UNKNOWN']);
+DevDet.deviceType = new Enum(['GEARVR', 'MOBILE', 'DESKTOP', 'VIVE', 'RIFT', 'WINDOWSMR', 'UNKNOWN']);
 
 //detected device
 DevDet.detectedDevice = null;
@@ -24,6 +24,8 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
   try{
     navigator.getVRDisplays().then(function (displays) {
       console.log("[DevDet devices]", displays[0]);
+
+      DevDet.displayDevice = displays[0];
 
       if(AFDevice.isGearVR()){
         DevDet.detectedDevice = DevDet.deviceType.GEARVR;
@@ -38,10 +40,13 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
             break;
           case 'OpenVR HMD':
             DevDet.detectedDevice = DevDet.deviceType.VIVE;
-            break;          
+            break;
           case 'HTC Vive MV':
             DevDet.detectedDevice = DevDet.deviceType.VIVE;
-            break;          
+            break;
+          case 'Acer AH100':
+            DevDet.detectedDevice = DevDet.deviceType.WINDOWSMR;
+            break;
           default: //undetected
             console.log('undetected device name: ' + displays[0].displayName);
             break;
@@ -49,11 +54,11 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
       }
       else if(displays.length === 0){
         DevDet.detectedDevice = DevDet.deviceType.DESKTOP;
+        DevDet.displayDevice = {displayName: "desktop"};
       }
       else {
         DevDet.detectedDevice = DevDet.deviceType.UNKNOWN;
       }
-      DevDet.displayDevice = displays[0];
       resolve(DevDet);
     });
   }

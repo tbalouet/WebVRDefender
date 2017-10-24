@@ -3,10 +3,6 @@
   "use strict";
 
   AFRAME.registerComponent("wvrtd-player-threedof", {
-    schema: {
-      slotID: { type: "string", default: "" },
-      type: { type: "string", default: "" }
-    },
     init: function() {
       var that = this;
       this.el.setAttribute("networked", {

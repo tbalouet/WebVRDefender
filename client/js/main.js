@@ -9,6 +9,7 @@ window.WVRTD = {};
   require("./components/assign_slot.js");
   require("./components/lookdown-controls.js");
   require("./components/player_threedof.js");
+  require("./components/player_sixdof.js");
   require("./components/player_desktop.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
