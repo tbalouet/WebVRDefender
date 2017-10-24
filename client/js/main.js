@@ -7,7 +7,9 @@ window.WVRTD = {};
 
   require("../lib/networked-aframe.js");
   require("./components/assign_slot.js");
-  require("./components/player.js");
+  require("./components/lookdown-controls.js");
+  require("./components/player_threedof.js");
+  require("./components/player_desktop.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");

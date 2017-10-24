@@ -120,7 +120,7 @@ var GameLaunchUI;
     if(document.querySelector("#playersListCard")){
       document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
     }
-    
+
     var spanWait = document.createElement("span");
     spanWait.id = "spanWait";
     spanWait.classList.add("card-title");

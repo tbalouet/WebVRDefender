@@ -126,9 +126,11 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
-          case WVRTD.devDet.deviceType.DESKTOP://For now
-            player.setAttribute("wvrtd-player", { type : this.clientState.type});
-          break;
+            player.setAttribute("wvrtd-player-threedof", { type : this.clientState.type});
+            break;
+          case WVRTD.devDet.deviceType.DESKTOP:
+            player.setAttribute("wvrtd-player-desktop", { type : this.clientState.type});
+            break;
         }
 
         document.querySelector("a-scene").appendChild(player);

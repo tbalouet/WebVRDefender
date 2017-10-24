@@ -2,7 +2,7 @@
 (function(){
   "use strict";
 
-  AFRAME.registerComponent("wvrtd-player", {
+  AFRAME.registerComponent("wvrtd-player-threedof", {
     schema: {
       slotID: { type: "string", default: "" },
       type: { type: "string", default: "" }
@@ -17,7 +17,6 @@
       this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});
       this.el.setAttribute("look-controls", {});
-      this.el.setAttribute("wvrtd-presentation-display", {});
 
       this.currentTarget = undefined;
 

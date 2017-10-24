@@ -103,20 +103,29 @@
       <a-asset-item id="dragon-gltf" src="public/assets/models/dragon/scene.gltf"></a-assets-item>
 
       <a-asset-item id="turret-gltf" src="public/assets/models/turret_head/scene.gltf"></a-assets-item>
+      <a-asset-item id="panda-gltf" src="public/assets/models/purple_panda/scene.gltf"></a-assets-item>
 
+      <!-- PLAYERS TEMPLATES -->
       <script id="tower-template" type="text/html">
         <a-entity class="tower">
           <a-entity gltf-model="#turret-gltf" position="0 -0.2 0" rotation="0 180 0" scale="3 3 3"></a-entity>
         </a-entity>
       </script>
+      <script id="panda-template" type="text/html">
+        <a-entity class="panda">
+          <a-entity gltf-model="#panda-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+        </a-entity>
+      </script>
+
+      <!-- ENEMYS TEMPLATES -->
       <script id="enemy-monster-template" type="text/html">
         <a-entity class="enemy">
-          <a-entity gltf-model="#monster-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
+          <a-entity class="enemy" gltf-model="#monster-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
       </script>
       <script id="enemy-dragon-template" type="text/html">
         <a-entity class="enemy">
-          <a-entity gltf-model="#dragon-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
+          <a-entity class="enemy" gltf-model="#dragon-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
       </script>
     </a-assets>
@@ -161,7 +170,7 @@
 
     <a-entity wvrtd-enemy-pool=""></a-entity>
 
-    <a-entity gltf-model="#terrain-gltf" position="0 1.58 0" ></a-entity>
+    <a-entity id="terrain" gltf-model="#terrain-gltf" position="0 1.58 0" ></a-entity>
 
     <a-entity wvrtd-goal="life=10" position="-0.224 0.141 -24.304" scale="35 35 35"></a-entity>
 

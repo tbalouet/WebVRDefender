@@ -7,7 +7,7 @@
       type        : {type: "string", default: "monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
-      dur         : {type: "number", default: 20000},
+      dur         : {type: "number", default: 40000},
       delay       : {type: "number", default: 10000},
       health      : {type: "number", default: 100},
       soundKill   : {type: "string", default: ""}

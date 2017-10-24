@@ -58,7 +58,7 @@
       type        : {type: "string", default: "monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
-      dur         : {type: "number", default: 20000},
+      dur         : {type: "number", default: 40000},
       delay       : {type: "number", default: 10000},
       health      : {type: "number", default: 100},
       soundKill   : {type: "string", default: ""}
@@ -388,9 +388,11 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
-          case WVRTD.devDet.deviceType.DESKTOP://For now
-            player.setAttribute("wvrtd-player", { type : this.clientState.type});
-          break;
+            player.setAttribute("wvrtd-player-threedof", { type : this.clientState.type});
+            break;
+          case WVRTD.devDet.deviceType.DESKTOP:
+            player.setAttribute("wvrtd-player-desktop", { type : this.clientState.type});
+            break;
         }
 
         document.querySelector("a-scene").appendChild(player);
@@ -507,7 +509,161 @@
 (function(){
   "use strict";
 
-  AFRAME.registerComponent("wvrtd-player", {
+  // internals
+  var EPS = 0.000001;
+  var panStart = new THREE.Vector3();
+  var panMove = new THREE.Vector3();
+  var panDelta = new THREE.Vector3();
+  var STATE = { NONE : -1, ROTATE : 0, DOLLY : 1, PAN : 2 };
+  var state = STATE.NONE;
+
+  AFRAME.registerComponent("wvrtd-lookdown-controls", {
+    init: function() {
+      this.object = this.el.object3D;
+      this.zoomSpeed = 0.005;
+      this.minDistance = 0;
+      this.maxDistance = Infinity;
+      this.scalarPan = 5;
+
+      this.domElement = document;
+
+      this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+      this.domElement.addEventListener( 'mousedown', this.onMouseDown.bind(this), false );
+      this.domElement.addEventListener( 'mousewheel', this.onMouseWheel.bind(this), false );
+
+      document.body.style.cursor = "-webkit-grab";
+    },
+    onMouseDown: function( event ) {
+      if ( this.enabled === false ) { return; }
+      event.preventDefault();
+
+      if ( event.button === 0 ) {
+        state = STATE.PAN;
+
+        panStart.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        panStart.z = -( event.clientY / window.innerHeight ) * 2 + 1;
+      }
+      this.domElement.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+      this.domElement.addEventListener( 'mouseup', this.onMouseUp.bind(this), false );
+
+      document.body.classList.add('a-grabbing');
+    },
+    onMouseMove: function( event ) {
+      if ( this.enabled === false ) return;
+
+      event.preventDefault();
+
+      if ( state === STATE.PAN ) {
+        panMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        panMove.z = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+        panDelta.subVectors(panStart, panMove);
+        panDelta.multiplyScalar(this.scalarPan);
+        panDelta.z *= -1;
+        panDelta.add(this.object.position);
+
+        this.el.setAttribute("position", AFRAME.utils.coordinates.stringify(panDelta));
+
+        panStart.copy(panMove);
+      }
+    },
+    onMouseUp: function( /* event */ ) {
+      if ( this.enabled === false ) return;
+
+      this.domElement.removeEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+      this.domElement.removeEventListener( 'mouseup', this.onMouseUp.bind(this), false );
+      state = STATE.NONE;
+      document.body.classList.remove('a-grabbing');
+    },
+    onMouseWheel: function( event ) {
+      if ( this.enabled === false ) return;
+      var delta = 0;
+
+      if ( event.wheelDelta ) { // WebKit / Opera / Explorer 9
+        delta = event.wheelDelta;
+      } else if ( event.detail ) { // Firefox
+        delta = - event.detail;
+      }
+
+      panDelta.copy(this.object.position);
+      panDelta.y += ( delta * -this.zoomSpeed );
+      this.el.setAttribute("position", AFRAME.utils.coordinates.stringify(panDelta));
+    }
+  });
+})();
+
+},{}],7:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
+  var DOWN_VECTOR = new THREE.Vector3(0, -1, 0);
+
+  AFRAME.registerComponent("wvrtd-player-desktop", {
+    dependencies: ['wvrtd-lookdown-controls'],
+    schema: {
+      slotID: { type: "string", default: "" },
+      type: { type: "string", default: "" }
+    },
+    init: function() {
+      var that = this;
+      this.el.setAttribute("networked", {
+        template          : "#panda-template",
+        showLocalTemplate : false
+      });
+
+      this.el.setAttribute("position", "3 10 2");
+      var camera = document.createElement("a-camera");
+      camera.setAttribute("user-height", 0);
+      camera.setAttribute("look-controls-enabled", false);
+      camera.setAttribute("rotation", "-90 0 0");
+      this.el.appendChild(camera);
+
+      this.el.setAttribute("wvrtd-lookdown-controls", {});
+
+      this.currentTarget = undefined;
+      this.formerPosition = new THREE.Vector3().copy(this.el.object3D.position);
+
+
+      var cursor = document.createElement("a-ring");
+      cursor.setAttribute("cursor", "");
+      cursor.setAttribute("position", "0 -3 0");
+      cursor.setAttribute("rotation", "-90 0 0");
+      cursor.setAttribute("radius-inner", 0.1);
+      cursor.setAttribute("radius-outer", 0.15);
+      cursor.setAttribute("color", "black");
+      this.el.appendChild(cursor);
+
+      this.el.setAttribute("raycaster", {objects: ".enemy"});
+      this.el.addEventListener("mouseenter", this.onMouseEnter.bind(this));
+      document.addEventListener("keyup", this.onKeyUp.bind(this));
+    },
+    onMouseEnter: function(data){
+      if(data.detail.intersectedEl.classList.contains("enemy")){
+        this.el.querySelector("[cursor]").setAttribute("material", {color:"red"});
+        this.currentTarget = data.detail.intersectedEl;
+      }
+      else{
+        this.el.querySelector("[cursor]").setAttribute("material", {color:"black"});
+        this.currentTarget = null;
+      }
+    },
+    onKeyUp: function(event){
+      var key = event.keyCode ? event.keyCode : event.which;
+      if (key == 32 && this.currentTarget) {
+        this.currentTarget.emit("hit");
+      }
+    }
+  });
+
+})();
+
+},{}],8:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent("wvrtd-player-threedof", {
     schema: {
       slotID: { type: "string", default: "" },
       type: { type: "string", default: "" }
@@ -522,7 +678,6 @@
       this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});
       this.el.setAttribute("look-controls", {});
-      this.el.setAttribute("wvrtd-presentation-display", {});
 
       this.currentTarget = undefined;
 
@@ -550,7 +705,7 @@
 
 })();
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var DevDet = {};
 
 (function(){
@@ -619,7 +774,7 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
 
 module.exports = DevDet;
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var GameLaunchUI;
 
 (function(){
@@ -742,7 +897,7 @@ var GameLaunchUI;
     if(document.querySelector("#playersListCard")){
       document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
     }
-    
+
     var spanWait = document.createElement("span");
     spanWait.id = "spanWait";
     spanWait.classList.add("card-title");
@@ -757,7 +912,7 @@ var GameLaunchUI;
 
 module.exports = GameLaunchUI;
 
-},{"./devDet.js":7}],9:[function(require,module,exports){
+},{"./devDet.js":9}],11:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -767,7 +922,9 @@ window.WVRTD = {};
 
   require("../lib/networked-aframe.js");
   require("./components/assign_slot.js");
-  require("./components/player.js");
+  require("./components/lookdown-controls.js");
+  require("./components/player_threedof.js");
+  require("./components/player_desktop.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
@@ -792,7 +949,7 @@ window.WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":10,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/player.js":6,"./gameLaunchUI.js":8}],10:[function(require,module,exports){
+},{"../lib/networked-aframe.js":12,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/lookdown-controls.js":6,"./components/player_desktop.js":7,"./components/player_threedof.js":8,"./gameLaunchUI.js":10}],12:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -15442,4 +15599,4 @@ window.WVRTD = {};
 /***/ })
 /******/ ]);
 
-},{}]},{},[9]);
+},{}]},{},[11]);
