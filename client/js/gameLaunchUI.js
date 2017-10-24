@@ -27,11 +27,11 @@ var GameLaunchUI;
       document.querySelector("#roomInputBtn").classList.remove("hide");
 
       document.querySelector("#roomChoiceGo").addEventListener("click", function(){
-	var roomName = document.querySelector("#room_name").value;
-	if (roomName.length == 0){
-	// if the user tries to enter a room without a name, generate one
-		roomName = "RandomRoom"+parseInt( Math.random()*10000 )
-	}
+        var roomName = document.querySelector("#room_name").value;
+        if (roomName.length == 0){
+          // if the user tries to enter a room without a name, generate one
+          roomName = "RandomRoom"+parseInt( Math.random()*10000 )
+        }
         location.href = location.origin + location.pathname + "?room=" + roomName
       });
     }
@@ -75,17 +75,17 @@ var GameLaunchUI;
     switch(WVRTD.devDet.detectedDevice){
       case WVRTD.devDet.deviceType.GEARVR:
       case WVRTD.devDet.deviceType.MOBILE:
-        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
-        createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
-        break;
+      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.GEARVR);
+      createBtn("gameChoiceMW", "MAGIC WINDOW MODE", WVRTD.devDet.deviceType.MOBILE);
+      break;
       case WVRTD.devDet.deviceType.VIVE:
       case WVRTD.devDet.deviceType.RIFT:
-        createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
-        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-        break;
+      createBtn("gameChoiceVR", "VR MODE", WVRTD.devDet.deviceType.RIFT);
+      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+      break;
       case WVRTD.devDet.deviceType.DESKTOP:
-        createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
-        break;
+      createBtn("gameChoiceMW", "DESKTOP MODE", WVRTD.devDet.deviceType.DESKTOP);
+      break;
     }
   };
 
@@ -99,9 +99,11 @@ var GameLaunchUI;
       this.createPlayerList(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState);
     }
 
-    document.querySelector("#launchGame").addEventListener("click", function(){
-      document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].launchGame();
-    })
+    if(document.querySelector("#launchGame")){
+      document.querySelector("#launchGame").addEventListener("click", function(){
+        document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].launchGame();
+      })
+    }
   };
 
   GameLaunchUI.prototype.createPlayerList = function(gameState){
@@ -115,7 +117,10 @@ var GameLaunchUI;
   };
 
   GameLaunchUI.prototype.removeLaunchGame = function(){
-    document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
+    if(document.querySelector("#playersListCard")){
+      document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
+    }
+    
     var spanWait = document.createElement("span");
     spanWait.id = "spanWait";
     spanWait.classList.add("card-title");

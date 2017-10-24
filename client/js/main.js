@@ -14,7 +14,6 @@ window.WVRTD = {};
   require("./components/enemy_wave.js");
   var GameLaunchUI = require("./gameLaunchUI.js");
 
-
   /**
   * Callback called on Networked AFrame server connect
   * @param  {[type]} data [description]
@@ -24,6 +23,7 @@ window.WVRTD = {};
     if(!document.querySelector("a-scene")){
       return;
     }
+    NAF.options.updateRate = 30;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 

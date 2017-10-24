@@ -33,7 +33,7 @@
         }
         that.hasFinished = true;
         document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
-        this.el.setAttribute("visible", false);
+        that.el.setAttribute("visible", false);
       });
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");

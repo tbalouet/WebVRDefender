@@ -2069,7 +2069,11 @@
 	    key: "write",
 	    value: function write() {
 	      if (this.debug) {
+          try{
 	        console.log.apply(this, arguments);
+        }catch(err){
+          console.log("Error in NAF log", err);
+        }
 	      }
 	    }
 	  }, {
@@ -3818,7 +3822,7 @@
 	     *     - signal: used to send signal
 	     *     - data: used to send guaranteed data
 	     *   - /timestamp/: working path to get timestamp
-	     *     - userId: 
+	     *     - userId:
 	     */
 
 	  }, {

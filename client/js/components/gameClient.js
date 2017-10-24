@@ -14,33 +14,29 @@
       this.gameState = undefined;
       this.serverConnected = false;
       this.mainClient = false;
-    },
-    setDevice: function(deviceType){
-      //TODO: Elaborate clientstate based on device
+
       this.clientState = {
         ID     : 0,
-        type   : deviceType,
-        slotID : undefined
+        type   : undefined
       };
-      if(this.serverConnected){
-        this.initClient();
-      }
+    },
+    setDevice: function(deviceType){
+      this.clientState.type = deviceType;
+      this.initPlayer();
     },
     /**
     * Init the client, called when connected to the server
     * @return {[type]} [description]
     */
     initClient : function(){
-      if(this.clientState){
-        window.onbeforeunload = this.onDisconnect.bind(this);
+      window.onbeforeunload = this.onDisconnect.bind(this);
 
-        NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
+      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
 
-        this.clientState.ID = NAF.clientId;
-        this.sendConnect();
+      this.clientState.ID = NAF.clientId;
+      this.sendConnect();
 
-        document.body.addEventListener('clientDisconnected', this.onClientDisconnected.bind(this));
-      }
+      document.body.addEventListener('clientDisconnected', this.onClientDisconnected.bind(this));
       this.serverConnected = true;
     },
     sendConnect: function(){
@@ -110,19 +106,6 @@
       * @return {[type]} [description]
       */
       initialSetup : function(){
-        let player = document.createElement("a-entity");
-        player.id = "player"+Math.floor(Math.random()*50);
-
-        switch(this.clientState.type){
-          case WVRTD.devDet.deviceType.GEARVR:
-          case WVRTD.devDet.deviceType.MOBILE:
-          case WVRTD.devDet.deviceType.DESKTOP://For now
-            player.setAttribute("wvrtd-player", { type : this.clientState.type});
-          break;
-        }
-
-        document.querySelector("a-scene").appendChild(player);
-
         if(Object.values(this.gameState.clients).length === 1){
           //If user is the first one, he's considered the game master
           this.mainClient = true;
@@ -135,6 +118,20 @@
         }
 
         NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+      },
+      initPlayer: function(){
+        let player = document.createElement("a-entity");
+        player.id = "player"+Math.floor(Math.random()*50);
+
+        switch(this.clientState.type){
+          case WVRTD.devDet.deviceType.GEARVR:
+          case WVRTD.devDet.deviceType.MOBILE:
+          case WVRTD.devDet.deviceType.DESKTOP://For now
+            player.setAttribute("wvrtd-player", { type : this.clientState.type});
+          break;
+        }
+
+        document.querySelector("a-scene").appendChild(player);
       },
       /**
        * Listener for NAF entities to be created
