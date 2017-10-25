@@ -53,6 +53,56 @@
 (function(){
   "use strict";
 
+  AFRAME.registerComponent("wvrtd-cursor-aim", {
+    schema: {
+      radiusInner: { type: "number", default: 0.1 },
+      radiusOuter: { type: "number", default: 0.15 },
+      color: { type: "string", default: "black" },
+      position: { type: "string", default: "0 0 0" },
+      rotation: { type: "string", default: "0 0 0" },
+      enemyHit  : {type: "array", default: ""},
+    },
+    init: function() {
+      var cursor = document.createElement("a-ring");
+      cursor.setAttribute("cursor", "");
+      cursor.setAttribute("position", this.data.position);
+      cursor.setAttribute("rotation", this.data.rotation);
+      cursor.setAttribute("radius-inner", this.data.radiusInner);
+      cursor.setAttribute("radius-outer", this.data.radiusOuter);
+      cursor.setAttribute("color", this.data.color);
+      this.el.appendChild(cursor);
+
+      var enemyHitClasses = "." + this.data.enemyHit.join(" .")
+      this.el.setAttribute("raycaster", {objects: enemyHitClasses });
+      this.el.addEventListener("mouseenter", this.onMouseEnter.bind(this));
+
+      this.currentTarget = undefined;
+    },
+    onMouseEnter: function(data){
+      var containsClass= false;
+      for(var i = 0; i < this.data.enemyHit.length; ++i){
+        if(data.detail.intersectedEl.classList.contains(this.data.enemyHit[i])){
+          containsClass = true;
+          break;
+        }
+      }
+      if(containsClass && data.detail.intersectedEl.hasStarted){
+        this.el.querySelector("[cursor]").setAttribute("material", {color:"red"});
+        this.currentTarget = data.detail.intersectedEl;
+      }
+      else{
+        this.el.querySelector("[cursor]").setAttribute("material", {color:"black"});
+        this.currentTarget = null;
+      }
+    }
+  });
+})();
+
+},{}],3:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
       type        : {type: "string", default: "monster"},
@@ -61,55 +111,58 @@
       dur         : {type: "number", default: 40000},
       delay       : {type: "number", default: 10000},
       health      : {type: "number", default: 100},
+      hitPoints   : {type: "number", default: 2},
       soundKill   : {type: "string", default: ""}
     },
     init: function() {
       var that = this;
       this.hasFinished = false;
+      this.hasStarted = false;
 
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
       });
+
       this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
+      this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
+
       this.el.setAttribute("position", this.data.startPos);
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
-      this.el.addEventListener('movingended', function () {
-        if (that.data.health > 0){
-          document.querySelector("[wvrtd-goal]").emit("enemy-entered");
-        }
-        that.hasFinished = true;
-        document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
-        that.el.setAttribute("visible", false);
-      });
+      this.el.addEventListener('movingended', this.onFinishedPath.bind(this));
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
-        that.onHit();
         NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      });
+      this.el.addEventListener("killed", function(){
+        that.onKill();
       });
 
       this.el.components["alongpath"].pauseComponent();
     },
     start: function(){
       this.el.components["alongpath"].playComponent();
-    },
-    onHit: function(data){
-      this.data.health -= 50;
-      console.log(this.data.type, 'hit', this.data.health, 'HP left')
-      if (this.data.health <= 0){
-        this.onKill();
-      }
+      this.el.querySelector("[class^=enemy]").hasStarted = true;
     },
     onKill: function(data){
       console.log(this.data.type, 'killed')
       this.el.setAttribute("visible", false);
-      this.el.emit("kill");
+      this.hasFinished = true;
+      document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+    },
+    onFinishedPath: function(){
+      if (this.el.components["wvrtd-life-bar"].currentLife > 0){
+        document.querySelector("[wvrtd-goal]").emit("enemy-entered", {hitPoints: this.data.hitPoints, origin: this.el});
+      }
+      this.hasFinished = true;
+      document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+      this.el.setAttribute("visible", false);
     }
   });
 
@@ -192,7 +245,7 @@
 
   })();
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
@@ -205,7 +258,8 @@
       this.waves = {
         "wave1" : {
           enemys : [
-            {type : "monster", number : 5, health : 100}
+            {type : "monster", number : 5, health : 100},
+            {type : "dragon", number : 3, health : 200}
           ],
           timeout: 10000
         },
@@ -219,9 +273,10 @@
       }
 
       this.currentWave = 0;
-
+      this.maxWave = 3;
 
       this.el.addEventListener("enemy-finished", this.onEnemyFinished.bind(this));
+      this.el.addEventListener("goal-destroyed", this.onGoalDestroyed.bind(this));
     },
     launchWave: function(waveNumber){
       this.currentWave = waveNumber || ++this.currentWave;
@@ -252,6 +307,10 @@
         this.launchNextWave();
       }
     },
+    onGoalDestroyed: function(){
+      this.wavesFinished();
+      this.currentWave = this.maxWave;
+    },
     wavesFinished: function(){
       console.log("====GAME FINISHED====");
     }
@@ -259,7 +318,7 @@
 
 })();
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /* global AFRAME, NAF */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -440,7 +499,7 @@
 
   })();
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
@@ -456,39 +515,31 @@
       // despite the dependencies the scene at the time has no available components
       var that = this;
 
-      this.currentLife = this.data.life;
-      //this.currentLife = parameters.goalHealth;
-
       this.mesh = document.createElement("a-entity")
       this.mesh.setAttribute("id", "goal-mesh");
       this.mesh.setAttribute("scale", "0.15 0.15 0.15");
       this.setModel("public/assets/models/castle/");
-      this.el.appendChild(this.mesh)
+      this.el.appendChild(this.mesh);
 
-      this.lifeMeshIndicator = document.createElement("a-cylinder")
-      // now to rescale because of parent
-      this.lifeMeshIndicator.setAttribute("color", "green")
-      this.lifeMeshIndicator.setAttribute("height", this.currentLife)
-      this.lifeMeshIndicator.setAttribute("scale", "0.01 0.01 0.01")
-      this.lifeMeshIndicator.setAttribute("position", "-0.124 0.168 -0.113")
-      this.el.appendChild(this.lifeMeshIndicator);
+
+      this.el.setAttribute("wvrtd-life-bar", {life : this.data.life, height : 0.2, radius : 0.01, position: "-0.124 0.225 -0.113"});
 
       NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
 
       // could have also used a component function
-      this.el.addEventListener('enemy-entered', function(){
-        NAF.connection.broadcastDataGuaranteed("goalHitNetwork", {type : "broadcast", gameState : this.gameState});
-        that.onHit();
-      });
+      this.el.addEventListener('enemy-entered', this.onEnemyEntered.bind(this));
+      this.el.addEventListener('killed', this.onKilled.bind(this));
     },
     setModel: function(modelPath){
       this.mesh.setAttribute("gltf-model", modelPath + "scene.gltf");
       console.log("[WVRTD-Goal]", "Castle degrading to", modelPath);
     },
+    onEnemyEntered: function(data){
+      NAF.connection.broadcastDataGuaranteed("goalHitNetwork", {type : "broadcast", gameState : this.gameState});
+      this.el.emit("hit", data.detail);
+    },
     onHit: function(){
       console.log("[WVRTD-Goal]", "============I WAS HIT!!!============");
-      --this.currentLife;
-      this.lifeMeshIndicator.setAttribute("height", this.currentLife);
 
       if (this.currentLife < 6) {
         this.setModel("public/assets/models/castle_lvl1/");
@@ -502,6 +553,9 @@
         this.setModel("public/assets/models/castle_lvl3/");
       }
     },
+    onKilled: function(){
+      document.querySelector("[wvrtd-enemy-wave]").emit("goal-destroyed");
+    },
     onGoalHitNetwork: function(senderID, msg, data){
       this.onHit();
     }
@@ -509,7 +563,59 @@
 
 })();
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
+/* global AFRAME */
+(function(){
+  "use strict";
+
+  AFRAME.registerComponent("wvrtd-life-bar", {
+    schema: {
+      life: { type: "number", default: 10 },
+      height: { type: "number", default: 1 },
+      radius: { type: "number", default: 0.2 },
+      position: { type: "string", default: "0.5 0.5 0" }
+    },
+    init: function() {
+      this.currentLife = this.data.life;
+
+      this.lifeBar = document.createElement("a-cylinder");
+      this.lifeBar.id = "lifeBar_" + (Math.floor(Math.random() * 100));
+      this.lifeBar.setAttribute("height", this.data.height);
+      this.lifeBar.setAttribute("radius", this.data.radius);
+      this.lifeBar.setAttribute("material", {color: this.colorMyLife(1)});
+      this.lifeBar.setAttribute("position", this.data.position);
+      this.el.appendChild(this.lifeBar);
+
+      this.el.addEventListener("hit", this.onHit.bind(this));
+    },
+    onHit: function(data){
+      this.currentLife -= data.detail.hitPoints;
+      if(this.currentLife > 0){
+        var ratio = this.currentLife / this.data.life;
+        this.lifeBar.setAttribute("height", this.data.height * ratio);
+        this.lifeBar.setAttribute("material", {color: this.colorMyLife(ratio)});
+      }
+      else{
+        this.lifeBar.setAttribute("visible", false);
+        this.el.emit("killed");
+      }
+    },
+    colorMyLife: function(ratio){
+      if(ratio > (2/3)){
+        return "green";
+      }
+      else if(ratio > (1/3)){
+        return "orange";
+      }
+      else{
+        return "red";
+      }
+    }
+  });
+
+})();
+
+},{}],8:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
@@ -597,7 +703,7 @@
   });
 })();
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
@@ -606,9 +712,9 @@
 
   AFRAME.registerComponent("wvrtd-player-desktop", {
     dependencies: ['wvrtd-lookdown-controls'],
-    schema: {
-      slotID: { type: "string", default: "" },
-      type: { type: "string", default: "" }
+    schema:{
+      hitPoints  : {type: "number", default: 50},
+      enemyHit  : {type: "array", default: "enemyMonster"},
     },
     init: function() {
       var that = this;
@@ -626,49 +732,39 @@
 
       this.el.setAttribute("wvrtd-lookdown-controls", {});
 
-      this.currentTarget = undefined;
-      this.formerPosition = new THREE.Vector3().copy(this.el.object3D.position);
 
-
-      var cursor = document.createElement("a-ring");
-      cursor.setAttribute("cursor", "");
-      cursor.setAttribute("position", "0 -3 0");
-      cursor.setAttribute("rotation", "-90 0 0");
-      cursor.setAttribute("radius-inner", 0.1);
-      cursor.setAttribute("radius-outer", 0.15);
-      cursor.setAttribute("color", "black");
-      this.el.appendChild(cursor);
-
-      this.el.setAttribute("raycaster", {objects: ".enemy"});
-      this.el.addEventListener("mouseenter", this.onMouseEnter.bind(this));
+      this.el.setAttribute("wvrtd-cursor-aim", {
+        position : "0 -3 0",
+        rotation : "-90 0 0",
+        radiusInner : 0.1,
+        radiusOuter : 0.15,
+        color : "black",
+        enemyHit : this.data.enemyHit
+      });
       document.addEventListener("keyup", this.onKeyUp.bind(this));
     },
-    onMouseEnter: function(data){
-      if(data.detail.intersectedEl.classList.contains("enemy")){
-        this.el.querySelector("[cursor]").setAttribute("material", {color:"red"});
-        this.currentTarget = data.detail.intersectedEl;
-      }
-      else{
-        this.el.querySelector("[cursor]").setAttribute("material", {color:"black"});
-        this.currentTarget = null;
-      }
-    },
     onKeyUp: function(event){
+      var cursorAim = this.el.components["wvrtd-cursor-aim"];
+
       var key = event.keyCode ? event.keyCode : event.which;
-      if (key == 32 && this.currentTarget) {
-        this.currentTarget.emit("hit");
+      if (key == 32 && cursorAim.currentTarget) {
+        cursorAim.currentTarget.emit("hit", {hitPoints: this.data.hitPoints, origin: this.el});
       }
     }
   });
 
 })();
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
 
   AFRAME.registerComponent("wvrtd-player-sixdof", {
+    schema:{
+      hitPoints  : {type: "number", default: 50},
+      enemyHit  : {type: "array", default: "enemyMonster"},
+    },
     init: function() {
       this.el.setAttribute("networked", {
         template          : "#giant-head-template",
@@ -697,12 +793,16 @@
 
 })();
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* global AFRAME */
 (function(){
   "use strict";
 
   AFRAME.registerComponent("wvrtd-player-threedof", {
+    schema:{
+      hitPoints  : {type: "number", default: 50},
+      enemyHit  : {type: "array", default: "enemyMonster, enemyDragon"},
+    },
     init: function() {
       var that = this;
       this.el.setAttribute("networked", {
@@ -714,33 +814,29 @@
       this.el.setAttribute("camera", {});
       this.el.setAttribute("look-controls", {});
 
-      this.currentTarget = undefined;
-
-      var cursor = document.createElement("a-ring");
-      cursor.setAttribute("cursor", "fuse: true; fuseTimeout: 500");
-      cursor.setAttribute("position", "0 0 -3");
-      cursor.setAttribute("radius-inner", 0.1);
-      cursor.setAttribute("radius-outer", 0.15);
-      cursor.setAttribute("animation", {property: "scale", dir: "normal", dur: 200, easing: "easeInSine", to: "0.1 0.1 0.1", startEvents: "click"});
-      cursor.setAttribute("color", "black");
-      this.el.appendChild(cursor);
-
-      cursor.addEventListener("click", function(data){
-        that.currentTarget = data.detail.intersectedEl;
+      this.el.setAttribute("wvrtd-cursor-aim", {
+        position : "0 0 -3",
+        radiusInner : 0.1,
+        radiusOuter : 0.15,
+        color : "black",
+        enemyHit : this.data.enemyHit
       });
-      cursor.addEventListener("animationcomplete", function(data){
-        if(that.currentTarget){
-          that.currentTarget.emit("hit");
-        }
-        that.currentTarget = undefined;
-        cursor.setAttribute("scale", "1 1 1");
-      });
+
+      document.addEventListener("click", this.onClick.bind(this));
+    },
+    onClick: function(event){
+      var cursorAim = this.el.components["wvrtd-cursor-aim"];
+      if(!cursorAim.currentTarget){
+        return;
+      }
+
+      cursorAim.currentTarget.emit("hit", {hitPoints: this.data.hitPoints, origin: this.el});
+      cursorAim.currentTarget = undefined;
     }
   });
-
 })();
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var DevDet = {};
 
 (function(){
@@ -814,7 +910,7 @@ DevDet.detectDevice = new Promise(function(resolve, reject){
 
 module.exports = DevDet;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var GameLaunchUI;
 
 (function(){
@@ -965,7 +1061,7 @@ var GameLaunchUI;
 
 module.exports = GameLaunchUI;
 
-},{"./devDet.js":10}],12:[function(require,module,exports){
+},{"./devDet.js":12}],14:[function(require,module,exports){
 /* global AFRAME */
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
@@ -976,9 +1072,11 @@ window.WVRTD = {};
   require("../lib/networked-aframe.js");
   require("./components/assign_slot.js");
   require("./components/lookdown-controls.js");
+  require("./components/cursor_aim.js");
   require("./components/player_threedof.js");
   require("./components/player_sixdof.js");
   require("./components/player_desktop.js");
+  require("./components/life_bar.js");
   require("./components/enemy.js");
   require("./components/gameClient.js");
   require("./components/goal.js");
@@ -1003,7 +1101,7 @@ window.WVRTD = {};
   };
 })();
 
-},{"../lib/networked-aframe.js":13,"./components/assign_slot.js":1,"./components/enemy.js":2,"./components/enemy_wave.js":3,"./components/gameClient.js":4,"./components/goal.js":5,"./components/lookdown-controls.js":6,"./components/player_desktop.js":7,"./components/player_sixdof.js":8,"./components/player_threedof.js":9,"./gameLaunchUI.js":11}],13:[function(require,module,exports){
+},{"../lib/networked-aframe.js":15,"./components/assign_slot.js":1,"./components/cursor_aim.js":2,"./components/enemy.js":3,"./components/enemy_wave.js":4,"./components/gameClient.js":5,"./components/goal.js":6,"./components/life_bar.js":7,"./components/lookdown-controls.js":8,"./components/player_desktop.js":9,"./components/player_sixdof.js":10,"./components/player_threedof.js":11,"./gameLaunchUI.js":13}],15:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -15653,4 +15751,4 @@ window.WVRTD = {};
 /***/ })
 /******/ ]);
 
-},{}]},{},[12]);
+},{}]},{},[14]);

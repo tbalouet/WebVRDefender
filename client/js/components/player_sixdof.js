@@ -3,6 +3,10 @@
   "use strict";
 
   AFRAME.registerComponent("wvrtd-player-sixdof", {
+    schema:{
+      hitPoints  : {type: "number", default: 50},
+      enemyHit  : {type: "array", default: "enemyMonster"},
+    },
     init: function() {
       this.el.setAttribute("networked", {
         template          : "#giant-head-template",

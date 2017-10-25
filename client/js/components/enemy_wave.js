@@ -10,7 +10,8 @@
       this.waves = {
         "wave1" : {
           enemys : [
-            {type : "monster", number : 5, health : 100}
+            {type : "monster", number : 5, health : 100},
+            {type : "dragon", number : 3, health : 200}
           ],
           timeout: 10000
         },
@@ -24,9 +25,10 @@
       }
 
       this.currentWave = 0;
-
+      this.maxWave = 3;
 
       this.el.addEventListener("enemy-finished", this.onEnemyFinished.bind(this));
+      this.el.addEventListener("goal-destroyed", this.onGoalDestroyed.bind(this));
     },
     launchWave: function(waveNumber){
       this.currentWave = waveNumber || ++this.currentWave;
@@ -56,6 +58,10 @@
       if(allFinished){
         this.launchNextWave();
       }
+    },
+    onGoalDestroyed: function(){
+      this.wavesFinished();
+      this.currentWave = this.maxWave;
     },
     wavesFinished: function(){
       console.log("====GAME FINISHED====");

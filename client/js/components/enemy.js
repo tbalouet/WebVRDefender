@@ -10,55 +10,58 @@
       dur         : {type: "number", default: 40000},
       delay       : {type: "number", default: 10000},
       health      : {type: "number", default: 100},
+      hitPoints   : {type: "number", default: 2},
       soundKill   : {type: "string", default: ""}
     },
     init: function() {
       var that = this;
       this.hasFinished = false;
+      this.hasStarted = false;
 
       this.el.setAttribute("networked", {
         template          : "#enemy-"+this.data.type+"-template",
         showLocalTemplate : true
       });
+
       this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
+      this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
+
       this.el.setAttribute("position", this.data.startPos);
 
       this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
-      this.el.addEventListener('movingended', function () {
-        if (that.data.health > 0){
-          document.querySelector("[wvrtd-goal]").emit("enemy-entered");
-        }
-        that.hasFinished = true;
-        document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
-        that.el.setAttribute("visible", false);
-      });
+      this.el.addEventListener('movingended', this.onFinishedPath.bind(this));
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
       this.el.addEventListener("hit", function(){
-        that.onHit();
         NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      });
+      this.el.addEventListener("killed", function(){
+        that.onKill();
       });
 
       this.el.components["alongpath"].pauseComponent();
     },
     start: function(){
       this.el.components["alongpath"].playComponent();
-    },
-    onHit: function(data){
-      this.data.health -= 50;
-      console.log(this.data.type, 'hit', this.data.health, 'HP left')
-      if (this.data.health <= 0){
-        this.onKill();
-      }
+      this.el.querySelector("[class^=enemy]").hasStarted = true;
     },
     onKill: function(data){
       console.log(this.data.type, 'killed')
       this.el.setAttribute("visible", false);
-      this.el.emit("kill");
+      this.hasFinished = true;
+      document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+    },
+    onFinishedPath: function(){
+      if (this.el.components["wvrtd-life-bar"].currentLife > 0){
+        document.querySelector("[wvrtd-goal]").emit("enemy-entered", {hitPoints: this.data.hitPoints, origin: this.el});
+      }
+      this.hasFinished = true;
+      document.querySelector("[wvrtd-enemy-wave]").emit("enemy-finished");
+      this.el.setAttribute("visible", false);
     }
   });
 
