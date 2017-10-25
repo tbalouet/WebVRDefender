@@ -137,14 +137,15 @@
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
-      this.el.addEventListener("hit", function(){
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      this.el.addEventListener("hit", function(data){
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", hitPoints: data.detail.hitPoints, enemyID : that.el.id});
       });
-      this.el.addEventListener("killed", function(){
-        that.onKill();
-      });
+      this.el.addEventListener("killed", this.onKill.bind(this));
 
       this.el.components["alongpath"].pauseComponent();
+    },
+    onHit: function(data){
+      this.el.components["wvrtd-life-bar"].onHit(data);
     },
     start: function(){
       this.el.components["alongpath"].playComponent();
@@ -167,21 +168,38 @@
   });
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
+    schema:{
+      type        : {type: "string", default: "monster"},
+      startPos    : {type: "string", default: "0 0 0"},
+      rotation    : {type: "string", default: "0 0 0"},
+      dur         : {type: "number", default: 40000},
+      delay       : {type: "number", default: 10000},
+      health      : {type: "number", default: 100},
+      hitPoints   : {type: "number", default: 2},
+      soundKill   : {type: "string", default: ""}
+    },
     init: function() {
       var that = this;
       this.el.setAttribute("cursor-listener", "");
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
-      this.el.addEventListener("hit", function(){
-        that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
+
+      this.el.setAttribute("position", this.data.startPos);
+
+      this.el.addEventListener("hit", function(data){
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id, hitPoints: data.detail.hitPoints});
       });
+      this.el.addEventListener("killed", this.onKill.bind(this));
     },
     onHit: function(data){
+      this.el.components["wvrtd-life-bar"].onHit(data);
+    },
+    onKill: function(data){
+      console.log(this.data.type, 'killed')
       this.el.setAttribute("visible", false);
-      this.el.emit("kill");
-    }
+    },
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {
@@ -286,7 +304,7 @@
       }
 
       this.currentWave = 0;
-      this.maxWave = 3;
+      this.maxWave = 5;
 
       this.el.addEventListener("enemy-finished", this.onEnemyFinished.bind(this));
       this.el.addEventListener("goal-destroyed", this.onGoalDestroyed.bind(this));
@@ -302,6 +320,7 @@
       document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(this.waves["wave" + this.currentWave].enemys);
       setTimeout(function(){
         document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+        NAF.connection.broadcastDataGuaranteed("enemyStarted", {type : "broadcast"});
       }, this.waves["wave" + this.currentWave].timeout);
     },
     launchNextWave: function(){
@@ -326,6 +345,7 @@
     },
     wavesFinished: function(){
       console.log("====GAME FINISHED====");
+      NAF.connection.broadcastDataGuaranteed("gameFinished", {type : "broadcast"});
     }
   });
 
@@ -449,9 +469,19 @@
           document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
           WVRTD.gameLaunchUI.removeLaunchGame();
           NAF.connection.subscribeToDataChannel("gameLaunched", this.onGameLaunched.bind(this));
+          NAF.connection.subscribeToDataChannel("enemyStarted", this.onEnemyStarted.bind(this));
+          NAF.connection.subscribeToDataChannel("gameFinished", this.onGameFinished.bind(this));
         }
 
         NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+      },
+      onEnemyStarted: function(){
+        document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
+          enemyElt.hasStarted = true;
+        })
+      },
+      onGameFinished: function(){
+        console.log("====GAME FINISHED====");
       },
       initPlayer: function(){
         let player = document.createElement("a-entity");
@@ -493,9 +523,12 @@
        * @return {[type]}          [description]
        */
       onEnemyHitNetwork : function(senderID, msg, data){
+        if(!document.querySelector("#"+data.enemyID)){
+          return;
+        }
         //Retrieve the enemy entity based on its ID, depending if user is game master or not
         let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
-        enemy.onHit();
+        enemy.onHit({hitPoints: data.hitPoints});
       },
       launchGame: function(){
         NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
@@ -603,7 +636,7 @@
       this.el.addEventListener("hit", this.onHit.bind(this));
     },
     onHit: function(data){
-      this.currentLife -= data.detail.hitPoints;
+      this.currentLife -= (data.detail ? data.detail.hitPoints : data.hitPoints);
       if(this.currentLife > 0){
         var ratio = this.currentLife / this.data.life;
         this.lifeBar.setAttribute("height", this.data.height * ratio);
@@ -1138,7 +1171,7 @@ window.WVRTD = {};
     if(!document.querySelector("a-scene")){
       return;
     }
-    NAF.options.updateRate = 30;
+    NAF.options.updateRate = 60;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 

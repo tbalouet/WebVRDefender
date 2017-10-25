@@ -36,14 +36,15 @@
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
-      this.el.addEventListener("hit", function(){
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      this.el.addEventListener("hit", function(data){
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", hitPoints: data.detail.hitPoints, enemyID : that.el.id});
       });
-      this.el.addEventListener("killed", function(){
-        that.onKill();
-      });
+      this.el.addEventListener("killed", this.onKill.bind(this));
 
       this.el.components["alongpath"].pauseComponent();
+    },
+    onHit: function(data){
+      this.el.components["wvrtd-life-bar"].onHit(data);
     },
     start: function(){
       this.el.components["alongpath"].playComponent();
@@ -66,21 +67,38 @@
   });
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
+    schema:{
+      type        : {type: "string", default: "monster"},
+      startPos    : {type: "string", default: "0 0 0"},
+      rotation    : {type: "string", default: "0 0 0"},
+      dur         : {type: "number", default: 40000},
+      delay       : {type: "number", default: 10000},
+      health      : {type: "number", default: 100},
+      hitPoints   : {type: "number", default: 2},
+      soundKill   : {type: "string", default: ""}
+    },
     init: function() {
       var that = this;
       this.el.setAttribute("cursor-listener", "");
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
 
-      this.el.addEventListener("hit", function(){
-        that.onHit();
-        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id});
+      this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
+
+      this.el.setAttribute("position", this.data.startPos);
+
+      this.el.addEventListener("hit", function(data){
+        NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id, hitPoints: data.detail.hitPoints});
       });
+      this.el.addEventListener("killed", this.onKill.bind(this));
     },
     onHit: function(data){
+      this.el.components["wvrtd-life-bar"].onHit(data);
+    },
+    onKill: function(data){
+      console.log(this.data.type, 'killed')
       this.el.setAttribute("visible", false);
-      this.el.emit("kill");
-    }
+    },
   });
 
   AFRAME.registerComponent('wvrtd-enemy-pool', {

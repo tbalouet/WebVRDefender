@@ -38,7 +38,7 @@
       }
 
       this.currentWave = 0;
-      this.maxWave = 3;
+      this.maxWave = 5;
 
       this.el.addEventListener("enemy-finished", this.onEnemyFinished.bind(this));
       this.el.addEventListener("goal-destroyed", this.onGoalDestroyed.bind(this));
@@ -54,6 +54,7 @@
       document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(this.waves["wave" + this.currentWave].enemys);
       setTimeout(function(){
         document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+        NAF.connection.broadcastDataGuaranteed("enemyStarted", {type : "broadcast"});
       }, this.waves["wave" + this.currentWave].timeout);
     },
     launchNextWave: function(){
@@ -78,6 +79,7 @@
     },
     wavesFinished: function(){
       console.log("====GAME FINISHED====");
+      NAF.connection.broadcastDataGuaranteed("gameFinished", {type : "broadcast"});
     }
   });
 

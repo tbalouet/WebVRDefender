@@ -115,9 +115,19 @@
           document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
           WVRTD.gameLaunchUI.removeLaunchGame();
           NAF.connection.subscribeToDataChannel("gameLaunched", this.onGameLaunched.bind(this));
+          NAF.connection.subscribeToDataChannel("enemyStarted", this.onEnemyStarted.bind(this));
+          NAF.connection.subscribeToDataChannel("gameFinished", this.onGameFinished.bind(this));
         }
 
         NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+      },
+      onEnemyStarted: function(){
+        document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
+          enemyElt.hasStarted = true;
+        })
+      },
+      onGameFinished: function(){
+        console.log("====GAME FINISHED====");
       },
       initPlayer: function(){
         let player = document.createElement("a-entity");
@@ -159,9 +169,12 @@
        * @return {[type]}          [description]
        */
       onEnemyHitNetwork : function(senderID, msg, data){
+        if(!document.querySelector("#"+data.enemyID)){
+          return;
+        }
         //Retrieve the enemy entity based on its ID, depending if user is game master or not
         let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
-        enemy.onHit();
+        enemy.onHit({hitPoints: data.hitPoints});
       },
       launchGame: function(){
         NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});

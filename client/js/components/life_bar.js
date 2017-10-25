@@ -23,7 +23,7 @@
       this.el.addEventListener("hit", this.onHit.bind(this));
     },
     onHit: function(data){
-      this.currentLife -= data.detail.hitPoints;
+      this.currentLife -= (data.detail ? data.detail.hitPoints : data.hitPoints);
       if(this.currentLife > 0){
         var ratio = this.currentLife / this.data.life;
         this.lifeBar.setAttribute("height", this.data.height * ratio);
