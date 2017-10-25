@@ -30,7 +30,7 @@ var myIceServers = [
   {"url":"stun:stun3.l.google.com:19302"}
 ];
 easyrtc.setOption("appIceServers", myIceServers);
-easyrtc.setOption("logLevel", "debug");
+easyrtc.setOption("logLevel", "warning");
 easyrtc.setOption("demosEnable", false);
 
 var gameServer = new GameServer(easyrtc);

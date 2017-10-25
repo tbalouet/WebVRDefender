@@ -2070,16 +2070,20 @@
 	    value: function write() {
 	      if (this.debug) {
           try{
-	        console.log.apply(this, arguments);
-        }catch(err){
-          console.log("Error in NAF log", err);
-        }
+  	        console.log.apply(this, arguments);
+          }catch(err){
+            console.log("Error in NAF log", err);
+          }
 	      }
 	    }
 	  }, {
 	    key: "error",
 	    value: function error() {
-	      console.error.apply(this, arguments);
+        try{
+  	      console.error.apply(this, arguments);
+        }catch(err){
+          console.log("Error in NAF log", err);
+        }
 	    }
 	  }]);
 

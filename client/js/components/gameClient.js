@@ -106,7 +106,13 @@
       * @return {[type]} [description]
       */
       initialSetup : function(){
-        if(Object.values(this.gameState.clients).length === 1){
+        var nbClients = 0;
+        for(var key in this.gameState.clients){
+          if(this.gameState.clients.hasOwnProperty(key)){
+            nbClients++;
+          }
+        }
+        if(nbClients === 1){
           //If user is the first one, he's considered the game master
           this.mainClient = true;
         }
@@ -136,7 +142,6 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
-        case WVRTD.devDet.deviceType.DESKTOP:
             player.setAttribute("wvrtd-player-threedof", {});
             break;
           case WVRTD.devDet.deviceType.DESKTOP:

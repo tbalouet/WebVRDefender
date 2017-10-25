@@ -460,7 +460,13 @@
       * @return {[type]} [description]
       */
       initialSetup : function(){
-        if(Object.values(this.gameState.clients).length === 1){
+        var nbClients = 0;
+        for(var key in this.gameState.clients){
+          if(this.gameState.clients.hasOwnProperty(key)){
+            nbClients++;
+          }
+        }
+        if(nbClients === 1){
           //If user is the first one, he's considered the game master
           this.mainClient = true;
         }
@@ -490,7 +496,6 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
-        case WVRTD.devDet.deviceType.DESKTOP:
             player.setAttribute("wvrtd-player-threedof", {});
             break;
           case WVRTD.devDet.deviceType.DESKTOP:
@@ -899,7 +904,8 @@
         enemyHit : this.data.enemyHit
       });
 
-      document.addEventListener("click", this.onClick.bind(this));
+      document.querySelector("canvas").addEventListener("click", this.onClick.bind(this));
+      document.querySelector("canvas").addEventListener("touch", this.onClick.bind(this));
     },
     onClick: function(event){
       var cursorAim = this.el.components["wvrtd-cursor-aim"];
@@ -1171,7 +1177,7 @@ window.WVRTD = {};
     if(!document.querySelector("a-scene")){
       return;
     }
-    NAF.options.updateRate = 60;
+    NAF.options.updateRate = 30;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 
@@ -3257,16 +3263,20 @@ window.WVRTD = {};
 	    value: function write() {
 	      if (this.debug) {
           try{
-	        console.log.apply(this, arguments);
-        }catch(err){
-          console.log("Error in NAF log", err);
-        }
+  	        console.log.apply(this, arguments);
+          }catch(err){
+            console.log("Error in NAF log", err);
+          }
 	      }
 	    }
 	  }, {
 	    key: "error",
 	    value: function error() {
-	      console.error.apply(this, arguments);
+        try{
+  	      console.error.apply(this, arguments);
+        }catch(err){
+          console.log("Error in NAF log", err);
+        }
 	    }
 	  }]);
 

@@ -30,7 +30,7 @@ window.WVRTD = {};
     if(!document.querySelector("a-scene")){
       return;
     }
-    NAF.options.updateRate = 60;
+    NAF.options.updateRate = 30;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 

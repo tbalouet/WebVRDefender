@@ -26,7 +26,8 @@
         enemyHit : this.data.enemyHit
       });
 
-      document.addEventListener("click", this.onClick.bind(this));
+      document.querySelector("canvas").addEventListener("click", this.onClick.bind(this));
+      document.querySelector("canvas").addEventListener("touch", this.onClick.bind(this));
     },
     onClick: function(event){
       var cursorAim = this.el.components["wvrtd-cursor-aim"];
