@@ -126,6 +126,7 @@
         switch(this.clientState.type){
           case WVRTD.devDet.deviceType.GEARVR:
           case WVRTD.devDet.deviceType.MOBILE:
+        case WVRTD.devDet.deviceType.DESKTOP:
             player.setAttribute("wvrtd-player-threedof", {});
             break;
           case WVRTD.devDet.deviceType.DESKTOP:
