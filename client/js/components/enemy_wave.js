@@ -11,7 +11,6 @@
         "wave1" : {
           enemys : [
             {type : "monster", number : 5, health : 100},
-            {type : "dragon", number : 3, health : 200}
           ],
           timeout: 10000
         },
@@ -22,6 +21,20 @@
           ],
           timeout: 10000
         },
+        "wave3" : {
+          enemys : [
+            {type : "monster", number : 8, health : 100},
+            {type : "dragon", number : 5, health : 200},
+          ],
+          timeout: 10000
+        },
+        "wave4" : {
+          enemys : [
+            {type : "monster", number : 10, health : 100},
+            {type : "dragon", number : 4, health : 200},
+          ],
+          timeout: 10000
+        }
       }
 
       this.currentWave = 0;

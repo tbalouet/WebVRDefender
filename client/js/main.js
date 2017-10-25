@@ -17,6 +17,8 @@ window.WVRTD = {};
   require("./components/gameClient.js");
   require("./components/goal.js");
   require("./components/enemy_wave.js");
+  require("../lib/aframe-animation-component.min.js");
+  require("../lib/aframe-curve-component.min.js");
   var GameLaunchUI = require("./gameLaunchUI.js");
 
   /**
