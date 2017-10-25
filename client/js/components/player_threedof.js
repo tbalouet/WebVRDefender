@@ -5,7 +5,7 @@
   AFRAME.registerComponent("wvrtd-player-threedof", {
     schema:{
       hitPoints  : {type: "number", default: 50},
-      enemyHit  : {type: "array", default: "enemyMonster, enemyDragon"},
+      enemyHit  : {type: "array", default: ["enemyMonster, enemyDragon"]},
     },
     init: function() {
       var that = this;

@@ -9,7 +9,7 @@
       color: { type: "string", default: "black" },
       position: { type: "string", default: "0 0 0" },
       rotation: { type: "string", default: "0 0 0" },
-      enemyHit  : {type: "array", default: ""},
+      enemyHit  : {type: "array", default: []},
     },
     init: function() {
       var cursor = document.createElement("a-ring");
@@ -21,7 +21,7 @@
       cursor.setAttribute("color", this.data.color);
       this.el.appendChild(cursor);
 
-      var enemyHitClasses = "." + this.data.enemyHit.join(" .")
+      var enemyHitClasses = "." + this.data.enemyHit.join(" .");
       this.el.setAttribute("raycaster", {objects: enemyHitClasses });
       this.el.addEventListener("mouseenter", this.onMouseEnter.bind(this));
 

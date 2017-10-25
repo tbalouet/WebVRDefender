@@ -8,7 +8,7 @@
     dependencies: ['wvrtd-lookdown-controls'],
     schema:{
       hitPoints  : {type: "number", default: 50},
-      enemyHit  : {type: "array", default: "enemyMonster"},
+      enemyHit  : {type: "array", default: ["enemyMonster"]},
     },
     init: function() {
       var that = this;
