@@ -28,171 +28,137 @@
     * Init the client, called when connected to the server
     * @return {[type]} [description]
     */
-    initClient : function(){
+    initClient : function(params){
+      this.roomName = params.roomName;
+      this.socket = io();
+
+      this.registerEvents();
+    },
+    registerEvents: function(){
       window.onbeforeunload = this.onDisconnect.bind(this);
 
-      NAF.connection.subscribeToDataChannel("gameStateUpdate", this.onGameStateUpdate.bind(this));
-
-      this.clientState.ID = NAF.clientId;
-      this.sendConnect();
-
-      document.body.addEventListener('clientDisconnected', this.onClientDisconnected.bind(this));
-      this.serverConnected = true;
+      this.socket.on("onConnect", this.onConnect.bind(this));
+      this.socket.on("onError", this.onError.bind(this));
+      this.socket.on("onRoomEntered", this.onRoomEntered.bind(this));
+      this.socket.on("onGameStateUpdate", this.onGameStateUpdate.bind(this));
     },
-    sendConnect: function(){
-      this.sendEvent("clientConnect", this.initialSetup.bind(this));
+    onConnect: function(data){
+      console.log("Client connected with ID="+data.clientID);
+      this.clientState.ID = data.clientID;
+      this.socket.emit("logInRoom", {roomName : this.roomName, client: this.clientState});
     },
     /**
-    * Send an event to the server and fetch back the Game State before broadcasting it
-    * @param  {[type]}   evtName  [description]
-    * @param  {Function} callback [description]
-    * @return {[type]}            [description]
+    * Event called on window.onbeforeunload when client disconnects
+    * @return {[type]} [description]
     */
-    sendEvent: function(evtName, callback){
-      var that = this;
-      callback = callback || function(){};
-
-      NAF.connection.adapter.easyrtc.sendServerMessage(evtName, { roomName: NAF.room, clientState : this.clientState },
-        function(msgType, msgData){
-          that.gameState = msgData.gameState;
-          console.log("[WVRTD-Game-Client]", "Gamestate received after "+evtName, that.gameState);
-          WVRTD.gameLaunchUI.createPlayerList(that.gameState);
-
-          setTimeout(that.sendGameStateUpdate.bind(that), 250);
-
-          callback();
-        }, function(errorCode, errorText){
-          console.log("[WVRTD-Game-Client]", "Error on calling server for " + evtName, errorText);
-        });
-      },
-      /**
-      * Function to broadcast a received update of the game state
-      * @return {[type]} [description]
-      */
-      sendGameStateUpdate: function(){
-        NAF.connection.broadcastDataGuaranteed("gameStateUpdate", {type : "broadcast", gameState : this.gameState});
-      },
-      /**
-      * Event called on window.onbeforeunload when client disconnects
-      * @return {[type]} [description]
-      */
-      onDisconnect : function(){
-        this.sendEvent("clientDisconnect");
-      },
-      /**
-      * Send game state to server when updated
-      * @return {[type]} [description]
-      */
-      sendGameStateToServer : function(){
-        this.sendEvent("gameStateUpdated");
-      },
-      /**
-      * Event received by clients when gameState is updated
-      * @param  {[type]} senderID [description]
-      * @param  {[type]} msg      [description]
-      * @param  {[type]} data     [description]
-      * @return {[type]}          [description]
-      */
-      onGameStateUpdate : function(senderID, msg, data){
-        this.gameState = data.gameState;
-        console.log("[WVRTD-Game-Client]", "Gamestate updated", this.gameState);
-        WVRTD.gameLaunchUI.createPlayerList(this.gameState);
-      },
-      onClientDisconnected: function(evt){
-        this.sendEvent("getGameState");
-      },
-      /**
-      * Init player entity by checking its type
-      * @return {[type]} [description]
-      */
-      initialSetup : function(){
-        var nbClients = 0;
-        for(var key in this.gameState.clients){
-          if(this.gameState.clients.hasOwnProperty(key)){
-            nbClients++;
-          }
-        }
-        if(nbClients === 1){
-          //If user is the first one, he's considered the game master
-          this.mainClient = true;
-        }
-        else{
-          //Otherwise, he'll be looking for enemy entities to be created
-          document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
-          WVRTD.gameLaunchUI.removeLaunchGame();
-          NAF.connection.subscribeToDataChannel("gameLaunched", this.onGameLaunched.bind(this));
-          NAF.connection.subscribeToDataChannel("enemyStarted", this.onEnemyStarted.bind(this));
-          NAF.connection.subscribeToDataChannel("gameFinished", this.onGameFinished.bind(this));
-        }
-
-        NAF.connection.subscribeToDataChannel("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
-      },
-      onEnemyStarted: function(){
-        document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
-          enemyElt.hasStarted = true;
-        })
-      },
-      onGameFinished: function(){
-        console.log("====GAME FINISHED====");
-      },
-      initPlayer: function(){
-        let player = document.createElement("a-entity");
-        player.id = "player"+Math.floor(Math.random()*50);
-
-        switch(this.clientState.type){
-          case WVRTD.devDet.deviceType.GEARVR:
-          case WVRTD.devDet.deviceType.MOBILE:
-            player.setAttribute("wvrtd-player-threedof", {});
-            break;
-          case WVRTD.devDet.deviceType.DESKTOP:
-            player.setAttribute("wvrtd-player-desktop", {});
-            break;
-          case WVRTD.devDet.deviceType.VIVE:
-          case WVRTD.devDet.deviceType.RIFT:
-          case WVRTD.devDet.deviceType.WINDOWSMR:
-            player.setAttribute("wvrtd-player-sixdof", {});
-            break;
-        }
-
-        document.querySelector("a-scene").appendChild(player);
-      },
-      /**
-       * Listener for NAF entities to be created
-       * @param  {Object} entity aframe entity received through network
-       * @return {[type]}        [description]
-       */
-      onNAFEntityCreated : function(entity){
-        if(entity.detail.el.components["networked"].data.template.indexOf("#enemy") !== -1){
-          entity.detail.el.setAttribute("wvrtd-enemy-network", "");
-        }
-      },
-      /**
-       * Listener for enemy hit via an other player
-       * @param  {[type]} senderID [description]
-       * @param  {[type]} msg      [description]
-       * @param  {[type]} data     [description]
-       * @return {[type]}          [description]
-       */
-      onEnemyHitNetwork : function(senderID, msg, data){
-        if(!document.querySelector("#"+data.enemyID)){
-          return;
-        }
-        //Retrieve the enemy entity based on its ID, depending if user is game master or not
-        let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
-        enemy.onHit({hitPoints: data.hitPoints});
-      },
-      launchGame: function(){
-        NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
-        WVRTD.gameLaunchUI.hideIntroUI();
-        document.querySelector("#windSound").components["sound"].playSound();
-
-        document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
-        document.querySelector("#windSound").components["sound"].play();
-      },
-      onGameLaunched : function(senderID, msg, data){
-        WVRTD.gameLaunchUI.hideIntroUI();
-        document.querySelector("#windSound").components["sound"].playSound();
+    onDisconnect : function(){
+      this.socket.emit("clientDisconnected", {roomName : this.roomName, clientID: this.clientState.ID});
+    },
+    onError: function(data){
+      console.log("[SERVER ERROR]", data.error);
+    },
+    onRoomEntered: function(data){
+      this.mainClient = data.isMainClient;
+      this.gameState = data.gameState;
+      console.log("Client " + this.clientState.ID + " entered room " + data.gameState.name + (this.mainClient ? " and is Main client" : ""));
+      this.initialSetup();
+    },
+    onGameStateUpdate: function(data){
+      this.gameState = data;
+      console.log("[WVRTD-Game-Client]", "Gamestate received", this.gameState);
+      if(!document.querySelector("#playersListCard").classList.contains("hide")){
+        WVRTD.gameLaunchUI.updatePlayerList(this.gameState);
       }
-    });
+    },
+    /**
+    * Send game state to server when updated
+    * @return {[type]} [description]
+    */
+    sendClientStateToServer : function(){
+      this.socket.emit("clientStateUpdated", {roomName : this.roomName, client: this.clientState});
+    },
+    /**
+    * Init player entity by checking its type
+    * @return {[type]} [description]
+    */
+    initialSetup : function(){
+      if(!this.mainClient){
+        //Otherwise, he'll be looking for enemy entities to be created
+        document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
+        WVRTD.gameLaunchUI.removeLaunchGame();
+        this.socket.on("gameLaunched", this.onGameLaunched.bind(this));
+        this.socket.on("enemyStarted", this.onEnemyStarted.bind(this));
+        this.socket.on("gameFinished", this.onGameFinished.bind(this));
+      }
 
-  })();
+      this.socket.on("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+    },
+    onEnemyStarted: function(){
+      document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
+        enemyElt.hasStarted = true;
+      })
+    },
+    onGameFinished: function(){
+      console.log("====GAME FINISHED====");
+    },
+    initPlayer: function(){
+      let player = document.createElement("a-entity");
+      player.id = "player"+Math.floor(Math.random()*50);
+
+      switch(this.clientState.type){
+        case WVRTD.devDet.deviceType.GEARVR:
+        case WVRTD.devDet.deviceType.MOBILE:
+          player.setAttribute("wvrtd-player-threedof", {});
+          break;
+        case WVRTD.devDet.deviceType.DESKTOP:
+          player.setAttribute("wvrtd-player-desktop", {});
+          break;
+        case WVRTD.devDet.deviceType.VIVE:
+        case WVRTD.devDet.deviceType.RIFT:
+        case WVRTD.devDet.deviceType.WINDOWSMR:
+          player.setAttribute("wvrtd-player-sixdof", {});
+          break;
+      }
+
+      document.querySelector("a-scene").appendChild(player);
+    },
+    /**
+     * Listener for NAF entities to be created
+     * @param  {Object} entity aframe entity received through network
+     * @return {[type]}        [description]
+     */
+    onNAFEntityCreated : function(entity){
+      if(entity.detail.el.components["networked"].data.template.indexOf("#enemy") !== -1){
+        entity.detail.el.setAttribute("wvrtd-enemy-network", "");
+      }
+    },
+    /**
+     * Listener for enemy hit via an other player
+     * @param  {[type]} senderID [description]
+     * @param  {[type]} msg      [description]
+     * @param  {[type]} data     [description]
+     * @return {[type]}          [description]
+     */
+    onEnemyHitNetwork : function(senderID, msg, data){
+      if(!document.querySelector("#"+data.enemyID)){
+        return;
+      }
+      //Retrieve the enemy entity based on its ID, depending if user is game master or not
+      let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
+      enemy.onHit({hitPoints: data.hitPoints});
+    },
+    launchGame: function(){
+      NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+
+      document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
+      document.querySelector("#windSound").components["sound"].play();
+    },
+    onGameLaunched : function(senderID, msg, data){
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+    }
+  });
+
+})();

@@ -5,7 +5,6 @@ window.WVRTD = {};
 (function(){
   "use strict";
 
-  require("../lib/networked-aframe.js");
   require("./components/assign_slot.js");
   require("./components/lookdown-controls.js");
   require("./components/cursor_aim.js");
@@ -20,19 +19,6 @@ window.WVRTD = {};
   require("../lib/aframe-animation-component.min.js");
   require("../lib/aframe-curve-component.min.js");
   var GameLaunchUI = require("./gameLaunchUI.js");
-
-  /**
-  * Callback called on Networked AFrame server connect
-  * @param  {[type]} data [description]
-  * @return {[type]}      [description]
-  */
-  window.onConnectCB = function(){
-    if(!document.querySelector("a-scene")){
-      return;
-    }
-    NAF.options.updateRate = 30;
-    document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
-  };
 
   window.onload = function(){
     WVRTD.gameLaunchUI = new GameLaunchUI();

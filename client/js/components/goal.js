@@ -22,7 +22,7 @@
 
       this.el.setAttribute("wvrtd-life-bar", {life : this.data.life, height : 0.2, radius : 0.01, position: "-0.124 0.225 -0.113"});
 
-      NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
+      // NAF.connection.subscribeToDataChannel("goalHitNetwork", this.onGoalHitNetwork.bind(this));
 
       // could have also used a component function
       this.el.addEventListener('enemy-entered', this.onEnemyEntered.bind(this));

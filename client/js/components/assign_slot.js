@@ -39,7 +39,7 @@
 
       if(slotID){
         gameClient.clientState.slotID = slotID;
-        gameClient.sendGameStateToServer();
+        gameClient.sendClientStateToServer();
       }
       return slotID;
     }

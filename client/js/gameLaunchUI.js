@@ -7,8 +7,8 @@ var GameLaunchUI;
 
   GameLaunchUI = function(){
     //Fetch the room name in the URL or puts you in room42
-    this.room = AFRAME.utils.getUrlParameter("room");
-    if(!this.room){
+    this.roomName = AFRAME.utils.getUrlParameter("room");
+    if(!this.roomName){
       this.initGameChoice();
     }
     else{
@@ -47,7 +47,7 @@ var GameLaunchUI;
       WVRTD.devDet = data;
       that.displayDeviceUI();
 
-      document.querySelector("a-scene").setAttribute( "networked-scene", {app: "WebVRDefender", room: that.room, debug: true, onConnect: "onConnectCB"});
+      document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient({roomName: that.roomName});
 
       document.getElementById("loaderDiv").classList.remove("make-container--visible");
       WVRTD.loaded = true;
@@ -97,7 +97,7 @@ var GameLaunchUI;
     document.querySelector("#roomJoinIncentive").innerHTML += location.href;
 
     if(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState){
-      this.createPlayerList(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState);
+      this.updatePlayerList(document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].gameState);
     }
 
     if(document.querySelector("#launchGame")){
@@ -107,7 +107,7 @@ var GameLaunchUI;
     }
   };
 
-  GameLaunchUI.prototype.createPlayerList = function(gameState){
+  GameLaunchUI.prototype.updatePlayerList = function(gameState){
     var nbPlayers = 0;
     for(var key in gameState.clients){
       if(gameState.clients.hasOwnProperty(key)){
@@ -118,7 +118,7 @@ var GameLaunchUI;
   };
 
   GameLaunchUI.prototype.removeLaunchGame = function(){
-    if(document.querySelector("#playersListCard")){
+    if(document.querySelector("#launchGame")){
       document.querySelector("#playersListCard").removeChild(document.querySelector("#launchGame"));
     }
 
