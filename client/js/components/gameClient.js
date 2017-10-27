@@ -192,6 +192,7 @@
       onGameLaunched : function(senderID, msg, data){
         WVRTD.gameLaunchUI.hideIntroUI();
         document.querySelector("#windSound").components["sound"].playSound();
+        document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
       }
     });
 

@@ -31,6 +31,8 @@ window.WVRTD = {};
       return;
     }
     NAF.options.updateRate = 30;
+    NAF.options.compressSyncPackets = true;
+    NAF.options.useLerp = false;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 

@@ -187,6 +187,9 @@
       this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
 
       this.el.setAttribute("position", this.data.startPos);
+      
+      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.components["alongpath"].pauseComponent();
 
       this.el.addEventListener("hit", function(data){
         NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id, hitPoints: data.detail.hitPoints});
@@ -546,6 +549,7 @@
       onGameLaunched : function(senderID, msg, data){
         WVRTD.gameLaunchUI.hideIntroUI();
         document.querySelector("#windSound").components["sound"].playSound();
+        document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
       }
     });
 
@@ -1195,6 +1199,8 @@ window.WVRTD = {};
       return;
     }
     NAF.options.updateRate = 30;
+    NAF.options.compressSyncPackets = true;
+    NAF.options.useLerp = false;
     document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"].initClient();
   };
 

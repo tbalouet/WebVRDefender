@@ -86,6 +86,9 @@
       this.el.setAttribute("wvrtd-life-bar", {life : this.data.health, height : 1.5, radius : 0.2});
 
       this.el.setAttribute("position", this.data.startPos);
+      
+      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.components["alongpath"].pauseComponent();
 
       this.el.addEventListener("hit", function(data){
         NAF.connection.broadcastDataGuaranteed("enemyHitNetwork", {type : "broadcast", enemyID : that.el.id, hitPoints: data.detail.hitPoints});
