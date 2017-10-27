@@ -34,6 +34,9 @@
 
       this.registerEvents();
     },
+    broadcastToRoom: function(evtName){
+      this.socket.emit("broadcastToRoom", {roomName : this.roomName, client: this.clientState, evtName: evtName});
+    },
     registerEvents: function(){
       window.onbeforeunload = this.onDisconnect.bind(this);
 
@@ -86,12 +89,33 @@
         //Otherwise, he'll be looking for enemy entities to be created
         document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
         WVRTD.gameLaunchUI.removeLaunchGame();
-        this.socket.on("gameLaunched", this.onGameLaunched.bind(this));
-        this.socket.on("enemyStarted", this.onEnemyStarted.bind(this));
+        this.socket.on("onGameLaunched", this.onGameLaunched.bind(this));
+        this.socket.on("onEnemyCreation", this.onEnemyCreation.bind(this));
+        this.socket.on("onEnemyStarted", this.onEnemyStarted.bind(this));
         this.socket.on("gameFinished", this.onGameFinished.bind(this));
       }
 
       this.socket.on("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+    },
+    launchGame: function(){
+      this.broadcastToRoom("onGameLaunched");
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+
+      document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
+    },
+    onGameLaunched : function(senderID, msg, data){
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+    },
+    onEnemyStarted : function(senderID, msg, data){
+      document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+    },
+    sendEnemyCreation : function(enemys){
+      this.socket.emit("enemyCreation", {roomName : this.roomName, client: this.clientState, enemys: enemys});
+    },
+    onEnemyCreation : function(data){
+      document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(data.enemys);
     },
     onEnemyStarted: function(){
       document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
@@ -146,18 +170,6 @@
       //Retrieve the enemy entity based on its ID, depending if user is game master or not
       let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
       enemy.onHit({hitPoints: data.hitPoints});
-    },
-    launchGame: function(){
-      NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
-      WVRTD.gameLaunchUI.hideIntroUI();
-      document.querySelector("#windSound").components["sound"].playSound();
-
-      document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
-      document.querySelector("#windSound").components["sound"].play();
-    },
-    onGameLaunched : function(senderID, msg, data){
-      WVRTD.gameLaunchUI.hideIntroUI();
-      document.querySelector("#windSound").components["sound"].playSound();
     }
   });
 

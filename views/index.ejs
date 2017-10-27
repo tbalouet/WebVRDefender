@@ -110,30 +110,19 @@
       <a-asset-item id="giant-hand-left-gltf" src="public/assets/models/giant_hand_left/scene.gltf"></a-assets-item>
 
       <!-- PLAYERS TEMPLATES -->
-      <script id="tower-template" type="text/html">
-        <a-entity class="tower" gltf-model="#turret-gltf" position="0 -0.2 0" rotation="0 180 0" scale="3 3 3"></a-entity>
-      </script>
-      <script id="panda-template" type="text/html">
-        <a-entity class="panda" gltf-model="#panda-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
-      </script>
-      <script id="giant-head-template" type="text/html">
-        <a-entity class="giant-head" gltf-model="#giant-head-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
-      </script>
-      <script id="giant-hand-right-template" type="text/html">
-        <a-entity class="giant-hand-right" gltf-model="#giant-hand-right-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-entity>
-      </script>
-      <script id="giant-hand-left-template" type="text/html">
-        <a-entity class="giant-hand-left" gltf-model="#giant-hand-left-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-entity>
-      </script>
+      <a-mixin id="tower" class="tower" gltf-model="#turret-gltf" position="0 -0.2 0" rotation="0 180 0" scale="3 3 3"></a-mixin>
+      <a-mixin id="panda" class="panda" gltf-model="#panda-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-mixin>
+      <a-mixin id="giant-head" class="giant-head" gltf-model="#giant-head-gltf" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-mixin>
+      <a-mixin id="giant-hand-right" class="giant-hand-right" gltf-model="#giant-hand-right-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-mixin>
+      <a-mixin id="giant-hand-left" class="giant-hand-left" gltf-model="#giant-hand-left-gltf" position="0 0 0" rotation="90 180 0" scale="0.4 0.4 0.4"></a-mixin>
 
       <!-- ENEMYS TEMPLATES -->
-      <script id="enemy-monster-template" type="text/html">
-        <a-entity class="enemyMonster" gltf-model="#monster-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
-      </script>
-      <script id="enemy-dragon-template" type="text/html">
-        <a-entity class="enemyDragon" gltf-model="#dragon-gltf" rotation="0 0 0" scale="1 1 1"></a-entity>
-      </script>
+      <a-mixin id="enemyMonster" gltf-model="#monster-gltf" rotation="0 0 0" scale="1 1 1"></a-mixin>
+      <a-mixin id="enemyDragon" gltf-model="#dragon-gltf" rotation="0 0 0" scale="1 1 1"></a-mixin>
     </a-assets>
+
+    <a-entity id="poolEnemyMonster" pool__enemyMonster="mixin: enemyMonster; size : 10"></a-entity>
+    <a-entity id="poolEnemyDragon" pool__enemyDragon="mixin: enemyDragon; size : 10"></a-entity>
 
     <a-entity id="windSound" sound="src: url(http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Wind-Mark_DiAngelo-1940285615.mp3); loop:true;"></a-entity>
 
@@ -144,7 +133,7 @@
         <a-entity id="slot2" position="6.455 6.100 -6.196" rotation="0 90 0"></a-entity>
         <a-entity id="slot3" position="-1.15 5.372 -12.175" rotation="0 -90 0"></a-entity>
       </a-entity>
-      <a-curve id="monster-track" curve="">
+      <a-curve id="Monster-track" curve="">
         <a-curve-point position="-1.525 0.24 30.255" curve-point=""></a-curve-point>
         <a-curve-point position="-1.228 0.122 28.881" curve-point=""></a-curve-point>
         <a-curve-point position="-3.384 0.778 24.914" curve-point=""></a-curve-point>
@@ -159,7 +148,7 @@
         <a-curve-point position="3.914 0.209 -14.394" curve-point=""></a-curve-point>
         <a-curve-point position="-0.047 0.775 -20.77" curve-point=""></a-curve-point>
       </a-curve>
-      <a-curve id="dragon-track" curve="">
+      <a-curve id="Dragon-track" curve="">
         <a-curve-point position="-9.96 2.834 27.57" curve-point=""></a-curve-point>
         <a-curve-point position="-0.095 4.217 22.069" curve-point=""></a-curve-point>
         <a-curve-point position="3.252 5.916 13.39" curve-point=""></a-curve-point>

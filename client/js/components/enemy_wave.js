@@ -10,28 +10,28 @@
       this.waves = {
         "wave1" : {
           enemys : [
-            {type : "monster", number : 5, health : 100},
+            {type : "Monster", number : 5, health : 100},
           ],
           timeout: 10000
         },
         "wave2" : {
           enemys : [
-            {type : "monster", number : 5, health : 100},
-            {type : "dragon", number : 3, health : 200},
+            {type : "Monster", number : 5, health : 100},
+            {type : "Dragon", number : 3, health : 200},
           ],
           timeout: 10000
         },
         "wave3" : {
           enemys : [
-            {type : "monster", number : 8, health : 100},
-            {type : "dragon", number : 5, health : 200},
+            {type : "Monster", number : 8, health : 100},
+            {type : "Dragon", number : 5, health : 200},
           ],
           timeout: 10000
         },
         "wave4" : {
           enemys : [
-            {type : "monster", number : 10, health : 100},
-            {type : "dragon", number : 4, health : 200},
+            {type : "Monster", number : 10, health : 100},
+            {type : "Dragon", number : 4, health : 200},
           ],
           timeout: 10000
         }
@@ -54,7 +54,6 @@
       document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(this.waves["wave" + this.currentWave].enemys);
       setTimeout(function(){
         document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
-        NAF.connection.broadcastDataGuaranteed("enemyStarted", {type : "broadcast"});
       }, this.waves["wave" + this.currentWave].timeout);
     },
     launchNextWave: function(){

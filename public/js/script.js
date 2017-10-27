@@ -105,7 +105,7 @@
 
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
-      type        : {type: "string", default: "monster"},
+      type        : {type: "string", default: "Monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 40000},
@@ -119,12 +119,12 @@
       this.hasFinished = false;
       this.hasStarted = false;
 
-      this.el.setAttribute("networked", {
-        template          : "#enemy-"+this.data.type+"-template",
-        showLocalTemplate : true
-      });
+      this.enemyElt = document.querySelector("#poolEnemy" + this.data.type).components["pool__enemy" + this.data.type.toLowerCase()].requestEntity();
+      this.enemyElt.classList.add("enemy" + this.data.type);
 
-      this.el.id = "naf-" + this.el.components["networked"].data.networkId;
+      this.el.appendChild(this.enemyElt);
+
+      // this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
@@ -169,7 +169,7 @@
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
     schema:{
-      type        : {type: "string", default: "monster"},
+      type        : {type: "string", default: "Monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 40000},
@@ -206,7 +206,7 @@
     dependencies: ["wvrtd-enemy-wave"],
     init: function() {
       this.enemyTypes = {
-        "monster": {
+        "Monster": {
           startPos: "-1.525 0.24 30.255",
           rotation : "0 180 0",
           durAdd: 20000,
@@ -216,7 +216,7 @@
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
           number : 2
         },
-        "dragon" : {
+        "Dragon" : {
           startPos: "-9.96 2.834 27.57",
           rotation : "0 0 0",
           durAdd: 20000,
@@ -232,6 +232,11 @@
         document.querySelectorAll("[wvrtd-enemy]").forEach(function(enemy){enemy.parentNode.removeChild(enemy);});
       },
       loadMonsters: function(enemys){
+        var gameClient = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"];
+        if(gameClient.mainClient){
+          gameClient.sendEnemyCreation(enemys);
+        }
+
         this.removeEnemys();
 
         for (var i=0; i < enemys.length; i++){
@@ -254,6 +259,11 @@
         }
       },
       start: function(){
+        var gameClient = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"];
+        if(gameClient.mainClient){
+          gameClient.broadcastToRoom("onEnemyStarted");
+        }
+
         var enemys = this.el.querySelectorAll("[wvrtd-enemy]");
         for(let i = 0; i < enemys.length; ++i){
           enemys[i].components["wvrtd-enemy"].start();
@@ -276,28 +286,28 @@
       this.waves = {
         "wave1" : {
           enemys : [
-            {type : "monster", number : 5, health : 100},
+            {type : "Monster", number : 5, health : 100},
           ],
           timeout: 10000
         },
         "wave2" : {
           enemys : [
-            {type : "monster", number : 5, health : 100},
-            {type : "dragon", number : 3, health : 200},
+            {type : "Monster", number : 5, health : 100},
+            {type : "Dragon", number : 3, health : 200},
           ],
           timeout: 10000
         },
         "wave3" : {
           enemys : [
-            {type : "monster", number : 8, health : 100},
-            {type : "dragon", number : 5, health : 200},
+            {type : "Monster", number : 8, health : 100},
+            {type : "Dragon", number : 5, health : 200},
           ],
           timeout: 10000
         },
         "wave4" : {
           enemys : [
-            {type : "monster", number : 10, health : 100},
-            {type : "dragon", number : 4, health : 200},
+            {type : "Monster", number : 10, health : 100},
+            {type : "Dragon", number : 4, health : 200},
           ],
           timeout: 10000
         }
@@ -320,7 +330,6 @@
       document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(this.waves["wave" + this.currentWave].enemys);
       setTimeout(function(){
         document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
-        NAF.connection.broadcastDataGuaranteed("enemyStarted", {type : "broadcast"});
       }, this.waves["wave" + this.currentWave].timeout);
     },
     launchNextWave: function(){
@@ -388,6 +397,9 @@
 
       this.registerEvents();
     },
+    broadcastToRoom: function(evtName){
+      this.socket.emit("broadcastToRoom", {roomName : this.roomName, client: this.clientState, evtName: evtName});
+    },
     registerEvents: function(){
       window.onbeforeunload = this.onDisconnect.bind(this);
 
@@ -440,12 +452,33 @@
         //Otherwise, he'll be looking for enemy entities to be created
         document.body.addEventListener('entityCreated', this.onNAFEntityCreated.bind(this));
         WVRTD.gameLaunchUI.removeLaunchGame();
-        this.socket.on("gameLaunched", this.onGameLaunched.bind(this));
-        this.socket.on("enemyStarted", this.onEnemyStarted.bind(this));
+        this.socket.on("onGameLaunched", this.onGameLaunched.bind(this));
+        this.socket.on("onEnemyCreation", this.onEnemyCreation.bind(this));
+        this.socket.on("onEnemyStarted", this.onEnemyStarted.bind(this));
         this.socket.on("gameFinished", this.onGameFinished.bind(this));
       }
 
       this.socket.on("enemyHitNetwork", this.onEnemyHitNetwork.bind(this));
+    },
+    launchGame: function(){
+      this.broadcastToRoom("onGameLaunched");
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+
+      document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
+    },
+    onGameLaunched : function(senderID, msg, data){
+      WVRTD.gameLaunchUI.hideIntroUI();
+      document.querySelector("#windSound").components["sound"].playSound();
+    },
+    onEnemyStarted : function(senderID, msg, data){
+      document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].start();
+    },
+    sendEnemyCreation : function(enemys){
+      this.socket.emit("enemyCreation", {roomName : this.roomName, client: this.clientState, enemys: enemys});
+    },
+    onEnemyCreation : function(data){
+      document.querySelector("[wvrtd-enemy-pool]").components["wvrtd-enemy-pool"].loadMonsters(data.enemys);
     },
     onEnemyStarted: function(){
       document.querySelectorAll("[class^=enemy]").forEach(function(enemyElt){
@@ -500,18 +533,6 @@
       //Retrieve the enemy entity based on its ID, depending if user is game master or not
       let enemy = document.querySelector("#"+data.enemyID).components["wvrtd-enemy"] || document.querySelector("#"+data.enemyID).components["wvrtd-enemy-network"];
       enemy.onHit({hitPoints: data.hitPoints});
-    },
-    launchGame: function(){
-      NAF.connection.broadcastDataGuaranteed("gameLaunched", {type : "broadcast"});
-      WVRTD.gameLaunchUI.hideIntroUI();
-      document.querySelector("#windSound").components["sound"].playSound();
-
-      document.querySelector("[wvrtd-enemy-wave]").components["wvrtd-enemy-wave"].launchWave(1, 10000);
-      document.querySelector("#windSound").components["sound"].play();
-    },
-    onGameLaunched : function(senderID, msg, data){
-      WVRTD.gameLaunchUI.hideIntroUI();
-      document.querySelector("#windSound").components["sound"].playSound();
     }
   });
 
@@ -736,10 +757,7 @@
     },
     init: function() {
       var that = this;
-      this.el.setAttribute("networked", {
-        template          : "#panda-template",
-        showLocalTemplate : false
-      });
+      this.el.setAttribute("mixin", "panda");
 
       this.el.setAttribute("position", "3 10 2");
       var camera = document.createElement("a-camera");
@@ -785,10 +803,7 @@
       handDisabledTime: {type: "number", default: 1000}
     },
     init: function() {
-      this.el.setAttribute("networked", {
-        template          : "#giant-head-template",
-        showLocalTemplate : false
-      });
+      this.el.setAttribute("mixin", "giant-head");
 
 
       this.el.setAttribute("position", "-1 1.4 7");
@@ -865,10 +880,7 @@
         };
       }
 
-      this.el.setAttribute("networked", {
-        template          : "#tower-template",
-        showLocalTemplate : true
-      });
+      this.el.setAttribute("mixin", "tower");
 
       this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});

@@ -4,7 +4,7 @@
 
   AFRAME.registerComponent("wvrtd-enemy", {
     schema:{
-      type        : {type: "string", default: "monster"},
+      type        : {type: "string", default: "Monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 40000},
@@ -18,12 +18,12 @@
       this.hasFinished = false;
       this.hasStarted = false;
 
-      this.el.setAttribute("networked", {
-        template          : "#enemy-"+this.data.type+"-template",
-        showLocalTemplate : true
-      });
+      this.enemyElt = document.querySelector("#poolEnemy" + this.data.type).components["pool__enemy" + this.data.type.toLowerCase()].requestEntity();
+      this.enemyElt.classList.add("enemy" + this.data.type);
 
-      this.el.id = "naf-" + this.el.components["networked"].data.networkId;
+      this.el.appendChild(this.enemyElt);
+
+      // this.el.id = "naf-" + this.el.components["networked"].data.networkId;
 
       this.el.setAttribute("cursor-listener", "");
 
@@ -68,7 +68,7 @@
 
   AFRAME.registerComponent("wvrtd-enemy-network", {
     schema:{
-      type        : {type: "string", default: "monster"},
+      type        : {type: "string", default: "Monster"},
       startPos    : {type: "string", default: "0 0 0"},
       rotation    : {type: "string", default: "0 0 0"},
       dur         : {type: "number", default: 40000},
@@ -105,7 +105,7 @@
     dependencies: ["wvrtd-enemy-wave"],
     init: function() {
       this.enemyTypes = {
-        "monster": {
+        "Monster": {
           startPos: "-1.525 0.24 30.255",
           rotation : "0 180 0",
           durAdd: 20000,
@@ -115,7 +115,7 @@
           soundKill : "http://vatelier.net/MyDemo/WebVRDefender/public/assets/sounds/Zombie_In_Pain-SoundBible.com-134322253.mp3",
           number : 2
         },
-        "dragon" : {
+        "Dragon" : {
           startPos: "-9.96 2.834 27.57",
           rotation : "0 0 0",
           durAdd: 20000,
@@ -131,6 +131,11 @@
         document.querySelectorAll("[wvrtd-enemy]").forEach(function(enemy){enemy.parentNode.removeChild(enemy);});
       },
       loadMonsters: function(enemys){
+        var gameClient = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"];
+        if(gameClient.mainClient){
+          gameClient.sendEnemyCreation(enemys);
+        }
+
         this.removeEnemys();
 
         for (var i=0; i < enemys.length; i++){
@@ -153,6 +158,11 @@
         }
       },
       start: function(){
+        var gameClient = document.querySelector("[wvrtd-game-client]").components["wvrtd-game-client"];
+        if(gameClient.mainClient){
+          gameClient.broadcastToRoom("onEnemyStarted");
+        }
+
         var enemys = this.el.querySelectorAll("[wvrtd-enemy]");
         for(let i = 0; i < enemys.length; ++i){
           enemys[i].components["wvrtd-enemy"].start();

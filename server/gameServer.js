@@ -53,6 +53,8 @@ GameServer.prototype.registerEvents = function(clientID){
   this.clients[clientID].socket.on("clientDisconnected", this.onClientDisconnected.bind(this));
   this.clients[clientID].socket.on("logInRoom", this.onLoginRoom.bind(this));
   this.clients[clientID].socket.on("clientStateUpdated", this.onClientStateUpdated.bind(this));
+  this.clients[clientID].socket.on("broadcastToRoom", this.onBroadcastToRoom.bind(this));
+  this.clients[clientID].socket.on("enemyCreation", this.onEnemyCreation.bind(this));
 
 
   //DEFAULT GAME CALLS
@@ -103,6 +105,7 @@ GameServer.prototype.broadcastRoom = function(roomName, clientID, eventName, dat
   var aRoom = this.rooms[roomName];
   for(var i = 0; i < aRoom.clients.length; ++i){
     if(aRoom.clients[i] !== clientID){
+  this.log("socket emit", eventName, data);
       this.clients[aRoom.clients[i]].socket.emit(eventName, data);
     }
   }
@@ -110,6 +113,15 @@ GameServer.prototype.broadcastRoom = function(roomName, clientID, eventName, dat
 
 GameServer.prototype.sendError = function(clientID, error){
   this.clients[clientID].emit("onError", {error: error});
+}
+
+GameServer.prototype.onBroadcastToRoom = function(data){
+  if(!this.checkClient(data.client.ID)){
+    this.log("Error clientStateUpdate " + data.roomName + ", client " + data.client.ID + " unknown");
+    return;
+  }
+
+  this.broadcastRoom(data.roomName, data.client.ID, data.evtName, {});
 }
 
 //============EVENTS HANDLERS============//
@@ -141,9 +153,7 @@ GameServer.prototype.onLoginRoom = function(data){
     var isMainClient = this.rooms[data.roomName].addClient(data.client);
     this.sendClient(data.client.ID, "onRoomEntered", {isMainClient: isMainClient, gameState: this.rooms[data.roomName]});
 
-    if(!isMainClient){
-      this.broadcastRoom(data.roomName, data.client.ID, "onGameStateUpdate", this.rooms[data.roomName]);
-    }
+    this.broadcastRoom(data.roomName, data.client.ID, "onGameStateUpdate", this.rooms[data.roomName]);
   }
 }
 
@@ -155,6 +165,15 @@ GameServer.prototype.onClientStateUpdated = function(data){
 
   this.rooms[data.roomName].updateClient(data.client);
   this.broadcastRoom(data.roomName, data.client.ID, "onGameStateUpdate", this.rooms[data.roomName]);
+}
+
+GameServer.prototype.onEnemyCreation = function(data){
+  if(!this.checkClient(data.client.ID)){
+    this.log("Error clientStateUpdate " + data.roomName + ", client " + data.client.ID + " unknown");
+    return;
+  }
+
+  this.broadcastRoom(data.roomName, data.client.ID, "onEnemyCreation", data.enemys);
 }
 
 /**

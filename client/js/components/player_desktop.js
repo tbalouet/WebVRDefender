@@ -12,10 +12,7 @@
     },
     init: function() {
       var that = this;
-      this.el.setAttribute("networked", {
-        template          : "#panda-template",
-        showLocalTemplate : false
-      });
+      this.el.setAttribute("mixin", "panda");
 
       this.el.setAttribute("position", "3 10 2");
       var camera = document.createElement("a-camera");

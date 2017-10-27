@@ -21,10 +21,7 @@
         };
       }
 
-      this.el.setAttribute("networked", {
-        template          : "#tower-template",
-        showLocalTemplate : true
-      });
+      this.el.setAttribute("mixin", "tower");
 
       this.el.setAttribute("wvrtd-assign-slot", {});
       this.el.setAttribute("camera", {});

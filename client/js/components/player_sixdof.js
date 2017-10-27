@@ -9,10 +9,7 @@
       handDisabledTime: {type: "number", default: 1000}
     },
     init: function() {
-      this.el.setAttribute("networked", {
-        template          : "#giant-head-template",
-        showLocalTemplate : false
-      });
+      this.el.setAttribute("mixin", "giant-head");
 
 
       this.el.setAttribute("position", "-1 1.4 7");
