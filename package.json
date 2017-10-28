@@ -4,17 +4,10 @@
   "description": "A WebVR Tower Defense game",
   "main": "server.js",
   "devDependencies": {
-    "browserify": "~14.3.0",
-    "watchify": "^3.7.0",
-    "concurrently": "^3.1.0",
-    "http-server": "^0.10.0",
-    "ejs": "^2.4.2",
-    "nodemon": "^1.9.2"
+    "http-server": "^0.10.0"
   },
   "scripts": {
-    "dev": "concurrently \"nodemon --inspect server.js NODE_ENV=dev\" \"watchify client/js/main.js -o public/js/script.js -v\" ",
-    "watch": "watchify client/js/main.js -o public/js/script.js -v",
-    "lint": "eslint -f html --color --fix client/js/** -o linterrors.html"
+    "start": "node server.js"
   },
   "author": "",
   "license": "Apache 2.0",

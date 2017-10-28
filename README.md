@@ -8,20 +8,7 @@ Getting started
 git clone https://github.com/tbalouet/WebVRDefender.git  # Clone the repository.
 cd WebVRDefender
 npm install # Install dependencies.
-npm run dev  # Start the local development server on http://localhost:3000
-```
-
-Javascript bundling
-------------------------------
-This project uses browserify. Once the server launched, it automatically bundles the files required from /client/js/main.js
-
-The bundled file is /public/js/script.js
-
-To add a file, you need to add ``require("/path/to/my/file.js");``
-If you want to import a class, the class file will need to have ``module.exports = MyClassName`` at the end of it, then you can use 
-```
-var MyClass = require("/path/to/my/class.js");
-var obj = new MyClass();
+npm run start  # Start the server on http://localhost:3000
 ```
 
 Folder Structure
@@ -55,8 +42,7 @@ Attributions
 ----------------
 
 * 3D models
- * winter theme by Aime
- * polluation theme by Erica Layton (not yet integrated) https://github.com/321c4
+ * winter theme by Aime Tribolet
 * Sounds
  * http://soundbible.com/1810-Wind.html
  * http://soundbible.com/1771-Laser-Cannon.html

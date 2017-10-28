@@ -46,7 +46,7 @@ app.get('/', function(req, res){
     res.redirect("https://" + req.headers['host'] + req.url);
     return;
   }
-  res.render('index.ejs', {aFrameFile : conf.aFrameFile});
+  res.sendFile(__dirname + '/index.html'); 
 });
 
 //listen on port
