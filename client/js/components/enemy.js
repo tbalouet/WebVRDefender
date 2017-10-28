@@ -31,7 +31,7 @@
 
       this.el.setAttribute("position", this.data.startPos);
 
-      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.setAttribute("alongpath", "rotate:false ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', this.onFinishedPath.bind(this));
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
@@ -87,7 +87,7 @@
 
       this.el.setAttribute("position", this.data.startPos);
       
-      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.setAttribute("alongpath", "rotate:false ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.components["alongpath"].pauseComponent();
 
       this.el.addEventListener("hit", function(data){

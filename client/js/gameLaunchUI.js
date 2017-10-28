@@ -69,6 +69,20 @@ var GameLaunchUI;
       var deviceType = aDeviceType;
       btn.addEventListener("click", function(){
         that.onGameChoiceMade(deviceType);
+
+        if(deviceType === WVRTD.devDet.deviceType.DESKTOP){
+          var mainCanvas = document.querySelector("canvas");
+          mainCanvas.addEventListener("click", function(){
+            mainCanvas.requestPointerLock = mainCanvas.requestPointerLock    ||
+                                mainCanvas.mozRequestPointerLock ||
+                                mainCanvas.webkitRequestPointerLock;
+            mainCanvas.requestPointerLock();
+          });
+
+          mainCanvas.pointerLockElement = mainCanvas.pointerLockElement    ||
+                              mainCanvas.mozPointerLockElement ||
+                              mainCanvas.webkitPointerLockElement;
+        }
       });
     }
 

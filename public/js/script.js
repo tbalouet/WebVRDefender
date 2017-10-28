@@ -132,7 +132,7 @@
 
       this.el.setAttribute("position", this.data.startPos);
 
-      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.setAttribute("alongpath", "rotate:false ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.addEventListener('movingended', this.onFinishedPath.bind(this));
 
       // this.el.setAttribute("sound", "on: kill; src: url("+this.data.soundKill+")");
@@ -188,7 +188,7 @@
 
       this.el.setAttribute("position", this.data.startPos);
       
-      this.el.setAttribute("alongpath", "rotate:true ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
+      this.el.setAttribute("alongpath", "rotate:false ; curve: #"+this.data.type+"-track; delay:" + this.data.delay + "; dur:"+this.data.dur+";");
       this.el.components["alongpath"].pauseComponent();
 
       this.el.addEventListener("hit", function(data){
@@ -699,6 +699,7 @@
       this.domElement.addEventListener( 'mousewheel', this.onMouseWheel.bind(this), false );
 
       document.body.style.cursor = "-webkit-grab";
+      document.addEventListener("keyup", this.onKeyUp.bind(this));
     },
     onMouseDown: function( event ) {
       if ( this.enabled === false ) { return; }
@@ -720,13 +721,23 @@
 
       event.preventDefault();
 
-      if ( state === STATE.PAN ) {
-        panMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        panMove.z = -( event.clientY / window.innerHeight ) * 2 + 1;
+      var isPointerLock = (document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement) !== undefined;
+      if ( state === STATE.PAN || isPointerLock) {
+        if(isPointerLock){
+          panMove.x = event.movementX;
+          panMove.z = event.movementY;
 
-        panDelta.subVectors(panStart, panMove);
-        panDelta.multiplyScalar(this.scalarPan);
-        panDelta.z *= -1;
+          panDelta.copy(panMove);
+          panDelta.multiplyScalar(0.001);
+        }
+        else{
+          panMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+          panMove.z = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+          panDelta.subVectors(panStart, panMove);
+          panDelta.multiplyScalar(this.scalarPan);
+          panDelta.z *= -1;
+        }
         panDelta.add(this.object.position);
 
         this.el.setAttribute("position", AFRAME.utils.coordinates.stringify(panDelta));
@@ -755,6 +766,12 @@
       panDelta.copy(this.object.position);
       panDelta.y += ( delta * -this.zoomSpeed );
       this.el.setAttribute("position", AFRAME.utils.coordinates.stringify(panDelta));
+    },
+    onKeyUp: function(event){
+      var key = event.keyCode ? event.keyCode : event.which;
+      if (key == 13) {
+        this.el.setAttribute("position", "3 10 2");
+      }
     }
   });
 })();
@@ -1086,6 +1103,20 @@ var GameLaunchUI;
       var deviceType = aDeviceType;
       btn.addEventListener("click", function(){
         that.onGameChoiceMade(deviceType);
+
+        if(deviceType === WVRTD.devDet.deviceType.DESKTOP){
+          var mainCanvas = document.querySelector("canvas");
+          mainCanvas.addEventListener("click", function(){
+            mainCanvas.requestPointerLock = mainCanvas.requestPointerLock    ||
+                                mainCanvas.mozRequestPointerLock ||
+                                mainCanvas.webkitRequestPointerLock;
+            mainCanvas.requestPointerLock();
+          });
+
+          mainCanvas.pointerLockElement = mainCanvas.pointerLockElement    ||
+                              mainCanvas.mozPointerLockElement ||
+                              mainCanvas.webkitPointerLockElement;
+        }
       });
     }
 
