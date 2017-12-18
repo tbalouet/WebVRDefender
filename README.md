@@ -11,6 +11,11 @@ npm install # Install dependencies.
 npm run start  # Start the server on http://localhost:3000
 ```
 
+How was it build?
+------------------------------
+See the medium post [Making the WebVR Game at MozFest](https://medium.com/mozilla-festival/making-the-webvr-game-at-mozfest-70fea3f06e66).
+![preview](https://cdn-images-1.medium.com/max/2000/1*t2S40Eurw_llOEHKZyXL3Q.png)
+
 Folder Structure
 ----------------
 
