@@ -47,9 +47,9 @@ Attributions
 ----------------
 
 * 3D models
- * winter theme by Aime Tribolet
-* Sounds
- * http://soundbible.com/1810-Wind.html
- * http://soundbible.com/1771-Laser-Cannon.html
- * http://soundbible.com/1033-Zombie-In-Pain.html
- * http://soundbible.com/2127-Dragon-Fire-Breath-and-Roar.html
+  * winter theme by Aime Tribolet
+* Sounds from soundbible (see respective author)
+  * http://soundbible.com/1810-Wind.html
+  * http://soundbible.com/1771-Laser-Cannon.html
+  * http://soundbible.com/1033-Zombie-In-Pain.html
+  * http://soundbible.com/2127-Dragon-Fire-Breath-and-Roar.html
